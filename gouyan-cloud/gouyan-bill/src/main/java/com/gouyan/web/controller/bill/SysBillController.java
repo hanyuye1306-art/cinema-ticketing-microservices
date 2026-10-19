@@ -9,6 +9,7 @@ import com.gouyan.system.domin.vo.SysBillVo;
 import com.gouyan.system.service.impl.SysBillServiceImpl;
 import com.gouyan.system.service.impl.SysMovieServiceImpl;
 import com.gouyan.system.service.impl.SysSessionServiceImpl;
+import com.gouyan.web.controller.bill.service.BillMovieQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,9 @@ public class SysBillController extends BaseController {
     @Autowired
     private SysMovieServiceImpl sysMovieService;
 
+    @Autowired
+    private BillMovieQueryService billMovieQueryService;
+
     @GetMapping("/sysBill")
     public ResponseResult findAll(SysBill sysBill){
         startPage();
@@ -41,6 +45,14 @@ public class SysBillController extends BaseController {
     @GetMapping("/sysBill/{id}")
     public ResponseResult findById(@PathVariable Long id){
         return getResult(sysBillService.findById(id));
+    }
+
+    /**
+     * 通过 OpenFeign 调用电影服务查询订单关联的电影信息。
+     */
+    @GetMapping("/sysBill/movie/{movieId}")
+    public ResponseResult findMovieById(@PathVariable Long movieId){
+        return billMovieQueryService.findMovieById(movieId);
     }
 
     @PostMapping("/sysBill")

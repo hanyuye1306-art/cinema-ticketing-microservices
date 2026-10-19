@@ -31,6 +31,12 @@
 			<artifactId>gouyan-framework</artifactId>
 		</dependency>
 
+		<!-- OpenFeign 声明式服务调用 -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
