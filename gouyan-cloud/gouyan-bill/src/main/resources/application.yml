@@ -71,6 +71,14 @@ eureka:
 gouyan-movie:
   ribbon:
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
+    ConnectTimeout: 1000
+    ReadTimeout: 4000
+    MaxAutoRetries: 0
+    MaxAutoRetriesNextServer: 0
+
+feign:
+  hystrix:
+    enabled: true
 
 hystrix:
   command:
@@ -81,3 +89,7 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 5000 #断路器超时时间，默认1000ms
+      circuitBreaker:
+        requestVolumeThreshold: 20
+        errorThresholdPercentage: 50
+        sleepWindowInMilliseconds: 5000

@@ -29,6 +29,9 @@ public class SysMovieController extends BaseController {
     @Value("${server.port}")
     private Integer serverPort;
 
+    @Value("${demo.movie.delay-ms:0}")
+    private Long demoDelayMs;
+
     @GetMapping("/sysMovie")
     public ResponseResult findAll(SysMovieVo sysMovieVo){
         startPage();
@@ -37,7 +40,11 @@ public class SysMovieController extends BaseController {
     }
 
     @GetMapping("/sysMovie/{id}")
-    public ResponseResult findById(@PathVariable Long id){
+    public ResponseResult findById(@PathVariable Long id) throws InterruptedException {
+        if (demoDelayMs > 0) {
+            log.info("Hystrix demo delay {} ms on gouyan-movie:{}", demoDelayMs, serverPort);
+            Thread.sleep(demoDelayMs);
+        }
         ResponseResult result = getResult(sysMovieService.findById(id));
         String servedBy = "gouyan-movie:" + serverPort;
         result.put("servedBy", servedBy);

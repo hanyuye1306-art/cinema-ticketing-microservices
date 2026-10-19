@@ -1,0 +1,28 @@
+hystrix:
+  command:
+    billMovieQuery:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 2000
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 500
+      circuitBreaker:
+        requestVolumeThreshold: 5
+        errorThresholdPercentage: 50
+        sleepWindowInMilliseconds: 3000
+      metrics:
+        rollingStats:
+          timeInMilliseconds: 10000
+
+gouyan-movie:
+  ribbon:
+    ConnectTimeout: 1000
+    ReadTimeout: 2000
+    MaxAutoRetries: 0
+    MaxAutoRetriesNextServer: 0
