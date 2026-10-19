@@ -5,7 +5,9 @@ import com.gouyan.common.response.ResponseResult;
 import com.gouyan.system.domin.SysMovie;
 import com.gouyan.system.domin.vo.SysMovieVo;
 import com.gouyan.system.service.impl.SysMovieServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +19,15 @@ import java.util.List;
  * @Author: xianxian
  * @Create: 2020-11-22 16:00
  */
+@Slf4j
 @RestController
 public class SysMovieController extends BaseController {
 
     @Autowired
     private SysMovieServiceImpl sysMovieService;
+
+    @Value("${server.port}")
+    private Integer serverPort;
 
     @GetMapping("/sysMovie")
     public ResponseResult findAll(SysMovieVo sysMovieVo){
@@ -32,7 +38,11 @@ public class SysMovieController extends BaseController {
 
     @GetMapping("/sysMovie/{id}")
     public ResponseResult findById(@PathVariable Long id){
-        return getResult(sysMovieService.findById(id));
+        ResponseResult result = getResult(sysMovieService.findById(id));
+        String servedBy = "gouyan-movie:" + serverPort;
+        result.put("servedBy", servedBy);
+        log.info("Movie {} query handled by {}", id, servedBy);
+        return result;
     }
 
     @PostMapping("/sysMovie")
