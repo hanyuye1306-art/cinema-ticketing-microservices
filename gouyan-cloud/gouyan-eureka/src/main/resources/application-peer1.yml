@@ -1,0 +1,10 @@
+server:
+  port: 7001
+
+eureka:
+  instance:
+    hostname: localhost
+    instance-id: eureka-peer1:7001
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:7002/eureka/
