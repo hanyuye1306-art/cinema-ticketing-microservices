@@ -4,7 +4,7 @@ hystrix:
       execution:
         isolation:
           thread:
-            timeoutInMilliseconds: 2000
+            timeoutInMilliseconds: 500
     default:
       execution:
         timeout:

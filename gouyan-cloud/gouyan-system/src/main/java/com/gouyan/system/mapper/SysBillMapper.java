@@ -14,6 +14,8 @@ public interface SysBillMapper {
 
     SysBill findById(Long id);
 
+    SysBill findByIdForUpdate(Long id);
+
     int add(SysBill sysBill);
 
     int update(SysBill sysBill);
@@ -21,5 +23,5 @@ public interface SysBillMapper {
     int delete(Long id);
 
     Double todayBoxOffice();
-    
+
 }

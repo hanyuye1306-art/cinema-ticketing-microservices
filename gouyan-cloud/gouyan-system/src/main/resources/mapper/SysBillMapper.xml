@@ -25,6 +25,10 @@
         select * from sys_bill where bill_id = #{id}
     </select>
 
+    <select id="findByIdForUpdate" parameterType="long" resultMap="BillMap">
+        select * from sys_bill where bill_id = #{id} for update
+    </select>
+
     <update id="add" parameterType="SysBill">
         <!-- 将添加后的主键id传回原对象 -->
         <selectKey keyProperty="billId" keyColumn="bill_id" resultType="long" order="AFTER">
@@ -48,7 +52,7 @@
         bill_date = sysdate()
         where bill_id = #{billId}
     </update>
-    
+
     <update id="delete" parameterType="long">
         delete from sys_bill where bill_id = #{id}
     </update>

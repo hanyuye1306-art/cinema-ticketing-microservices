@@ -7,5 +7,5 @@ import com.gouyan.common.response.ResponseResult;
  */
 public interface BillMovieQueryService {
 
-    ResponseResult findMovieById(Long movieId);
+    ResponseResult findMovieById(Long movieId, String token);
 }
