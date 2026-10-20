@@ -75,12 +75,4 @@ public class JwtUtil {
 
     }
 
-    public static void main(String[] args) {
-        /**
-         * 测试生成一个token
-         * 结果：eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MDc0ODI5OTYsInVzZXJuYW1lIjoi5ZGo5YWrIn0.UP6kFC0BofuX7FLoPDMWCQno-NhVuYA0NlQG8xgt2Rc
-         */
-        String sign = sign("周八", "f93643c0eacc54a5ee1783744466ab9e");
-       log.warn("测试生成一个token\n"+sign);
-    }
 }

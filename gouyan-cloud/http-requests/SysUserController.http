@@ -18,7 +18,7 @@ Accept: application/json
 
 ### 查询一个
 GET http://localhost:8181/sysUser/3
-token:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MDc0OTk4OTUsInVzZXJuYW1lIjoi5ZGo5YWrIn0.RbEZ7YeX53SjrIiSzW0W5W23-vMP_kyCidiB4MVOC3U
+token: {{token}}
 
 ### 修改
 PUT http://localhost:8181/sysUser
