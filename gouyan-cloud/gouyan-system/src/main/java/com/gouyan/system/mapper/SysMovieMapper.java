@@ -5,10 +5,6 @@ import com.gouyan.system.domin.vo.SysMovieVo;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-22 10:00
- */
 public interface SysMovieMapper {
 
     /**

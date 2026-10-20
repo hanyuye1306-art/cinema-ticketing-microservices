@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 10:45
- */
 @Service
 public class SysUserHobbyServiceImpl implements SysUserHobbyService {
 

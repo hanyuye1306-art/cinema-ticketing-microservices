@@ -4,10 +4,6 @@ import com.gouyan.system.domin.SysHall;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-25 10:16
- */
 public interface SysHallMapper {
     List<SysHall> findAll(SysHall sysHall);
 

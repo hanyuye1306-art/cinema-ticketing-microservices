@@ -6,10 +6,6 @@ import com.gouyan.system.domin.vo.SysUserVo;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-22 21:48
- */
 public interface SysUserMapper {
     List<SysUser> findAll(SysUser sysUser);
 

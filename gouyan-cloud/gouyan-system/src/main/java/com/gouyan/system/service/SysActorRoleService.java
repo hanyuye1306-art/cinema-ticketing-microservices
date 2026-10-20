@@ -5,10 +5,6 @@ import com.gouyan.system.domin.SysMovieAge;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-19 22:53
- */
 public interface SysActorRoleService {
     List<SysActorRole> findAll();
 

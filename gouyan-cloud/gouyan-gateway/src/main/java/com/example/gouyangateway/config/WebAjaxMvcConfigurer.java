@@ -14,8 +14,6 @@ import java.util.List;
 /**
  * @ProjectName: cloud-netflix
  * @Package: com.ruoyi.gateway.config
- * @ClassName: WebAjaxMvcConfigurer
- * @Description:
  * @Version: 1.0
  */
 @Configuration

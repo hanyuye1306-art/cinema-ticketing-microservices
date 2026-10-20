@@ -4,10 +4,6 @@ import com.gouyan.system.domin.SysResource;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-19 22:53
- */
 public interface SysResourceService {
     List<SysResource> findAll();
 

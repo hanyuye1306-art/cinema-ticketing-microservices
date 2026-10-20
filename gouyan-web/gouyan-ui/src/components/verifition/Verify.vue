@@ -237,7 +237,6 @@
     .tips-enter-active,.tips-leave-active{
         transition: bottom .5s;
     }
-    /* ---------------------------- */
     /*常规验证码*/
     .verify-code {
         font-size: 20px;

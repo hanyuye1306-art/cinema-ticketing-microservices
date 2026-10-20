@@ -15,8 +15,6 @@ import java.util.List;
 
 /**
  * 场次实体类
- * @Author: xianxian
- * @Create: 2020-11-23 21:59
  */
 @Data
 @AllArgsConstructor

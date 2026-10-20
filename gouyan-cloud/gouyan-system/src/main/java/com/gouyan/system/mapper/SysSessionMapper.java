@@ -6,10 +6,6 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-23 22:29
- */
 public interface SysSessionMapper {
 
     /**

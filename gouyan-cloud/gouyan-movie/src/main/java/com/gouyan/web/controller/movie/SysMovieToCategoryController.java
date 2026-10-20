@@ -7,10 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-30 22:56
- */
 @RestController
 public class SysMovieToCategoryController extends BaseController {
 

@@ -4,10 +4,6 @@ import com.gouyan.system.domin.SysMovieToCategory;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-30 22:13
- */
 public interface SysMovieToCategoryMapper {
 
     List<SysMovieToCategory> findAll(SysMovieToCategory sysMovieToCategory);

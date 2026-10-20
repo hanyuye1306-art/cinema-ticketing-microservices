@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 09:23
- */
 @RestController
 public class SysCinemaAreaController extends BaseController {
 

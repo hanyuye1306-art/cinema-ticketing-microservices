@@ -4,8 +4,6 @@ import org.apache.shiro.authc.AuthenticationToken;
 
 /**
  * 实现shiro的AuthenticationToken接口的类JwtToken
- * @Author: xianxian
- * @Create: 2020-12-09 10:35
  */
 public class JwtToken implements AuthenticationToken {
 

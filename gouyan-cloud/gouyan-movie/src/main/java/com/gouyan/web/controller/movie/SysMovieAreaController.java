@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-18 22:27
- */
 @RestController
 public class SysMovieAreaController extends BaseController {
     @Autowired

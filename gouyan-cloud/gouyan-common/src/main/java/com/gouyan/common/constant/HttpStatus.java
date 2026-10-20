@@ -2,8 +2,6 @@ package com.gouyan.common.constant;
 
 /**
  * 定义常量记录Http状态码
- * @Author: xianxian
- * @Create: 2020-11-17 22:25
  */
 public class HttpStatus {
     /**

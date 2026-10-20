@@ -4,10 +4,6 @@ import com.gouyan.system.domin.SysCinemaArea;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 09:08
- */
 public interface SysCinemaAreaMapper {
 
     /**

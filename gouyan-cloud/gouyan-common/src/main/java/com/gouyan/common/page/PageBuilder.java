@@ -8,8 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 构建页对象，通过ServletUtil减少Controller方法上的请求参数
- * @Author: xianxian
- * @Create: 2020-11-19 16:35
  */
 public class PageBuilder {
 

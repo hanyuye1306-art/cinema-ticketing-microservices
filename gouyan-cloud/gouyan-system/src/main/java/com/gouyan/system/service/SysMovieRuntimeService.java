@@ -5,10 +5,6 @@ import com.gouyan.system.domin.SysUserHobby;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 10:43
- */
 public interface SysMovieRuntimeService {
 
     List<SysMovieRuntime> findAll();

@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-30 14:27
- */
 @RestController
 public class SysBillController extends BaseController {
 

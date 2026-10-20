@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-22 21:51
- */
 @Service
 public class SysMovieCommentServiceImpl implements SysMovieCommentService {
 

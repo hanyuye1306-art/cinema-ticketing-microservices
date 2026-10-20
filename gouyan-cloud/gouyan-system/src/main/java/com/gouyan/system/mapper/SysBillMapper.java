@@ -4,10 +4,6 @@ import com.gouyan.system.domin.SysBill;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-30 14:01
- */
 public interface SysBillMapper {
 
     List<SysBill> findAll(SysBill sysBill);

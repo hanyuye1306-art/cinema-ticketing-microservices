@@ -14,10 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-22 21:45
- */
 @Service("sysUserService")
 public class SysUserServiceImpl implements SysUserService {
 

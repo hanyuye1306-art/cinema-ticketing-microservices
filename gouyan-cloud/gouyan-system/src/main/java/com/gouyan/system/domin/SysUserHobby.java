@@ -10,8 +10,6 @@ import java.io.Serializable;
 
 /**
  * 个人爱好
- * @Author: xianxian
- * @Create: 2020-11-20 10:32
  */
 @Data
 @AllArgsConstructor

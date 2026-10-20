@@ -15,10 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-22 16:00
- */
 @Slf4j
 @RestController
 public class SysMovieController extends BaseController {

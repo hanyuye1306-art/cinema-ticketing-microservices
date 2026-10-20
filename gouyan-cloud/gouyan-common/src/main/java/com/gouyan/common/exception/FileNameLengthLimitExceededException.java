@@ -2,8 +2,6 @@ package com.gouyan.common.exception;
 
 /**
  * 文件名字长度超过限制异常，用于文件校验
- * @Author: xianxian
- * @Create: 2020-12-04 20:09
  */
 public class FileNameLengthLimitExceededException extends RuntimeException{
 

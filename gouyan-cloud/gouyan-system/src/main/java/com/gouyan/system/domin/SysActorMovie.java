@@ -7,10 +7,6 @@ import lombok.ToString;
 
 import java.io.Serializable;
 
-/**
- * @author lxd
- * @create 2020-11-27 10:09
- */
 
 @AllArgsConstructor
 @NoArgsConstructor

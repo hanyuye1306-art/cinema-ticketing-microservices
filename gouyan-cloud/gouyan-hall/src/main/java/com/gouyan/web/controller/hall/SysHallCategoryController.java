@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-19 21:39
- */
 
 @RestController
 public class SysHallCategoryController extends BaseController {

@@ -3,10 +3,6 @@ package com.gouyan.system.mapper;
 import com.gouyan.system.domin.SysMovieAge;
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-14 22:52
- */
 public interface SysMovieAgeMapper {
 
     /**

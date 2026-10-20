@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-14 22:59
- */
 @Service
 public class SysMovieAgeServiceImpl implements SysMovieAgeService {
 

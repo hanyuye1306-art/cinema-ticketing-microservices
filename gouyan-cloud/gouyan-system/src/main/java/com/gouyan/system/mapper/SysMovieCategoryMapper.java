@@ -5,10 +5,6 @@ import com.gouyan.system.domin.SysMovieCategory;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-19 18:43
- */
 public interface SysMovieCategoryMapper {
 
     /**

@@ -17,8 +17,6 @@ import java.util.Map;
 
 /**
  * 配置shiro安全框架
- * @Author: xianxian
- * @Create: 2020-12-07 18:58
  */
 @Configuration
 public class ShiroConfig {

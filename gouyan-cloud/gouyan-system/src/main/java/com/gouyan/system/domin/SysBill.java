@@ -12,8 +12,6 @@ import java.util.Date;
 
 /**
  * 订单实体类
- * @Author: xianxian
- * @Create: 2020-11-30 13:53
  */
 @Data
 @NoArgsConstructor

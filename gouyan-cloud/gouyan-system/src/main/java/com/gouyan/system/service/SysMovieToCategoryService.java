@@ -5,10 +5,6 @@ import com.gouyan.system.domin.SysMovieToCategory;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-30 22:19
- */
 public interface SysMovieToCategoryService {
 
     List<SysMovieToCategory> findAll(SysMovieToCategory sysMovieToCategory);

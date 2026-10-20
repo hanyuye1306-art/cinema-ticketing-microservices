@@ -7,10 +7,6 @@ import com.gouyan.system.domin.vo.SysUserVo;
 
 import java.util.List;
 
-/**
- * @author lxd
- * @create 2020-11-22 21:42
- */
 public interface SysUserService {
     List<SysUser> findAll(SysUser sysUser);
 

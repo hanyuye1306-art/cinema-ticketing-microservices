@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 10:54
- */
 @RestController
 public class SysUserHobbyController extends BaseController {
 

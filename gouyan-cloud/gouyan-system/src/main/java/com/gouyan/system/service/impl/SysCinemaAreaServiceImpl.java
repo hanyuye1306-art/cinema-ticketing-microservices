@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * @Author: xianxian
- * @Create: 2020-11-20 09:19
- */
 @Service
 public class SysCinemaAreaServiceImpl implements SysCinemaAreaService {
 

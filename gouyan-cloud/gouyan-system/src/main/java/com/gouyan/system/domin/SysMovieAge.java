@@ -10,8 +10,6 @@ import java.io.Serializable;
 
 /**
  * 电影年代
- * @Author: xianxian
- * @Create: 2020-11-14 22:46
  */
 @Data
 @AllArgsConstructor
