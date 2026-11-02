@@ -240,7 +240,7 @@ export default {
       },
       actorlist: [],
       total: 0,
-      url: 'http://localhost:8181/',
+      url: process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8181/',
       //控制对话框的显示与隐藏
       addDialogVisible: false,
       //添加演员的表单数据

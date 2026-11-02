@@ -3,7 +3,7 @@
     <el-header>
       <div class="header-inner">
         <a href="/welcome" class="logo">
-          <img style="width: 200px; height: 68px; margin-top: 6px;" src="../assets/homeLogo.jpg">
+          <img src="../assets/homeLogo-fixed.png" alt="狗眼电影">
         </a>
         <el-menu
             :default-active="activeUrl"
@@ -115,20 +115,36 @@ export default {
 }
 
 .header-inner{
-  width: 75%;
-  margin: 0 12.5%;
+  width: min(1200px, calc(100% - 48px));
+  height: 80px;
+  margin: 0 auto;
   display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .logo{
-  height: 80px;
-  width: 200px;
+  width: clamp(180px, 14vw, 220px);
+  height: 72px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.logo img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
 }
 
 .nav-menu{
   border-bottom: 0px solid #eee !important;
   height: 60px;
-  margin: 9px auto;
+  margin: 9px auto 9px 0;
+  flex: 0 0 auto;
 }
 
 .el-menu-item{
@@ -140,16 +156,33 @@ export default {
 }
 
 .searchContainer{
-  padding: 20px 0;
+  width: clamp(300px, 24vw, 390px);
+  height: 48px;
   display: flex;
+  flex: 0 1 390px;
+  position: relative;
+  align-items: center;
+}
+
+.searchBar{
+  width: 100%;
 }
 
 .searchBar >>> input{
+  height: 48px;
+  padding: 0 64px 0 22px;
   border-radius: 50px;
+  font-size: 16px;
 }
 
 #searchBtn{
-  transform: translate(-100%, 0);
+  width: 48px;
+  height: 48px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: none;
+  z-index: 2;
 }
 
 .el-dropdown-link{
@@ -158,6 +191,40 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+@media (max-width: 1100px) {
+  .header-inner{
+    width: calc(100% - 24px);
+    gap: 12px;
+  }
+
+  .logo{
+    width: 170px;
+  }
+
+  .searchContainer{
+    min-width: 250px;
+  }
+
+  .el-menu-item{
+    padding: 0 14px;
+  }
+}
+
+@media (max-width: 850px) {
+  .logo{
+    width: 140px;
+  }
+
+  .searchContainer{
+    min-width: 190px;
+  }
+
+  .searchBar >>> input{
+    padding-left: 16px;
+    font-size: 14px;
+  }
 }
 
 .icon-arrow {

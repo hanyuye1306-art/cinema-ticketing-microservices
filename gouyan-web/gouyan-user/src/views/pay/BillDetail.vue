@@ -76,7 +76,7 @@
         <div class="submit-bill">
           <div>总价：<span>{{(billInfo.sysSession.sessionPrice * billSeats.length).toFixed(1)}}</span></div>
           <div v-if="state === false && (minutes > 0 || seconds > 0)">
-            <el-button @click="payForBill" type="primary" style="width: 200px; margin-top: 20px;" round>立即支付</el-button></div>
+            <el-button @click="payForBill" :loading="paying" :disabled="paying" type="primary" style="width: 200px; margin-top: 20px;" round>立即支付</el-button></div>
         </div>
       </div>
     </div>
@@ -104,6 +104,7 @@ export default {
       //计时
       minutes: 1,
       seconds: 0,
+      paying: false,
     }
   },
   created() {
@@ -124,29 +125,22 @@ export default {
       this.computeLeftTime()
     },
     async payForBill(){
-      //更新订单状态
-      this.billInfo.billState = true
-      //获取场次座位信息
-      const { data : curSession } = await axios.get('sysSession/' + this.billInfo.sessionId)
-      let sessionSeats = JSON.parse(curSession.data.sessionSeats)
-      //解析出订单选择的座位，更新座位信息
-      for(let seat of this.billSeats){
-        let row = seat.substring(0, seat.indexOf('排'))
-        let col = Number.parseInt(seat.substring(seat.indexOf('排') + 1, seat.length - 1))
-        sessionSeats[row][col - 1] = 3
-      }
-      //更新订单信息和场次座位信息
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      const { data: res } = await axios.put('sysBill',JSON.stringify({sysBill: this.billInfo, sessionSeats: JSON.stringify(sessionSeats)}))
-      if(res.code !== 200) return this.$message.error('支付失败')
+      if (this.paying) return
+      this.paying = true
+      try {
+        this.billInfo.billState = true
+        // 服务端在事务中校验并锁定座位，前端不再提交可被篡改的整份座位图。
+        const { data: res } = await axios.put('sysBill', {sysBill: this.billInfo})
+        if(res.code !== 200) return this.$message.error(res.msg || '支付失败')
 
-      this.state = true
-      this.$alert('支付成功！您可以前往个人中心查看订单信息', '支付通知', {
-        confirmButtonText: '我知道了',
-        callback: action => {
-          this.$router.push('/movie')
-        }
-      });
+        this.state = true
+        this.$alert('支付成功！您可以前往个人中心查看订单信息', '支付通知', {
+          confirmButtonText: '我知道了',
+          callback: () => this.$router.push('/movie')
+        });
+      } finally {
+        this.paying = false
+      }
     },
     computeLeftTime(){
       let cur = new Date()

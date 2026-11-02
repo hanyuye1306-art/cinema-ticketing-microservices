@@ -1,6 +1,6 @@
 <template>
   <!-- 分类查询 -->
-  <div>
+  <div v-loading="loading" element-loading-text="正在加载影院">
     <div class="tags-container">
       <div class="tags-line">
         <div class="tags-title">类型:</div>
@@ -41,7 +41,8 @@
     <div class="list-header">
       <h2 class=""><span>影院列表</span></h2>
     </div>
-    <div class="list-content" v-for="item in cinemaList">
+    <content-skeleton class="cinema-skeleton" v-if="loading && cinemaList.length === 0" type="rows" :count="5" />
+    <div class="list-content" v-for="item in cinemaList" :key="item.cinemaId">
       <div class="list-left">
         <a href="#" class="cinema-name">{{ item.cinemaName }}</a>
         <p class="cinema-address">地址：{{ item.cinemaAddress }}</p>
@@ -60,8 +61,10 @@
 </template>
 
 <script>
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "Cinema",
+  components: { ContentSkeleton },
   data() {
     return {
       queryInfo: {
@@ -79,14 +82,13 @@ export default {
       cinemaAreaList: [],
       hallCategoryList: [],
       cinemaList: [],
-      sorry: false
+      sorry: false,
+      loading: true,
+      cinemaRequestId: 0
     }
   },
   created() {
-    this.getCinemaBrandList()
-    this.getCinemaAreaList()
-    this.getHallCategoryList()
-    this.getCinemaList()
+    this.loadCinemaPage()
   },
   computed: {
     listenChange () {
@@ -100,6 +102,19 @@ export default {
     }
   },
   methods: {
+    async loadCinemaPage() {
+      this.loading = true
+      try {
+        await Promise.all([
+          this.getCinemaBrandList(),
+          this.getCinemaAreaList(),
+          this.getHallCategoryList(),
+          this.getCinemaList()
+        ])
+      } finally {
+        this.loading = false
+      }
+    },
     async getCinemaBrandList() {
       const {data: res} = await axios.get('sysCinemaBrand')
       if (res.code !== 200) return this.$message.error('获取服务器信息失败')
@@ -116,6 +131,8 @@ export default {
       this.hallCategoryList = res.data
     },
     async getCinemaList(){
+      const requestId = ++this.cinemaRequestId
+      this.loading = true
       console.log(this.brandRadio)
       this.queryInfo.cinemaBrandId = this.brandRadio
       this.queryInfo.cinemaAreaId = this.areaRadio
@@ -128,11 +145,15 @@ export default {
         this.queryInfo.isTicketChanged = null
         this.queryInfo.isRefunded = null
       }
-      const {data: res} = await axios.get('sysCinema', { params: this.queryInfo })
-      if (res.code !== 200) return this.$message.error('获取服务器信息失败')
-      this.cinemaList = res.data
-      if (this.cinemaList.length == 0 ) this.sorry = true
-      else this.sorry = false
+      try {
+        const {data: res} = await axios.get('sysCinema', { params: this.queryInfo })
+        if (requestId !== this.cinemaRequestId) return
+        if (res.code !== 200) return this.$message.error('获取服务器信息失败')
+        this.cinemaList = res.data
+        this.sorry = this.cinemaList.length === 0
+      } finally {
+        if (requestId === this.cinemaRequestId) this.loading = false
+      }
     },
     toCinemaInfo(id){
       this.$router.push('/cinemaInfo/' + id)
@@ -205,6 +226,11 @@ export default {
   border-left: 4px solid #409EFF;
   font-size: 18px;
   color: #333;
+}
+
+.cinema-skeleton {
+  width: 1200px;
+  margin: 0 auto;
 }
 
 .list-content{

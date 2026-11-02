@@ -65,6 +65,15 @@ INSERT INTO `sys_actor` VALUES (22, '姜伟', '[\"/images/actor/2020/12/15/9ddfd
 INSERT INTO `sys_actor` VALUES (23, ' 杜杰', '[\"/images/actor/2020/12/15/6b6957b25e2a437a80009906e0645896.jpg\"]', NULL, 44, 1, '北京电影学院摄影系', NULL, NULL, '处女座', '中国', '杜杰，1976年9月出生于河北省，1997年毕业于中央美术学院附中，2001年毕业于北京电影学院摄影系本科。 自2004年杜杰与中国著名导演宁浩相继合作拍摄电影《绿草地》《疯狂的石头》《疯狂的赛车》《无人区》逐渐成为中国当代最为活跃的一线年轻摄影师 随着中国电影市场的繁荣，杜杰与其它多位导演共同拍摄多部获得极大商业成功的电影，包括：《唐人街探案1》、《唐人街探案2》《厨子戏子痞子》《大笑江湖》《分手大师》等，其中取景纽约拍摄的《唐人街探案2》更是取得了33亿元人民币的中国影史第三高票房的成绩。 在拍摄商业电影的同时，杜杰也同时拍摄了一些极具价值的艺术电影，包括：《罗曼蒂克消亡史》《雪暴》《转山》《静静的玛尼石》《走着瞧》《边境风云》等。');
 INSERT INTO `sys_actor` VALUES (24, '李淼', '[\"/images/actor/2020/12/15/7ad9949c113143d58079ad0e582544f4.jpg\"]', NULL, NULL, 1, '中国传媒大学', NULL, NULL, ' 射手座', '中国', '李淼，电影美术指导、造型指导，2004年毕业于中国传媒大学戏剧影视美术专业。 代表作品：《唐人街探案1》，《唐人街探案2》，《我不是药神》，《嫌疑人X的献身》，《左耳》，《天台爱情》等');
 INSERT INTO `sys_actor` VALUES (25, '王钢', '[\"/images/actor/2020/12/15/3397f270491049e386178c7464a06876.jpg\"]', 165.00, 47, 1, NULL, NULL, 'O型', NULL, '中国', '王钢，男，国家中影数字制作基地后期制作公司录音指导、声音设计、混录师。代表作品有《夜店》、《无人区》、《王的盛宴》、《让子弹飞》、《决战刹马镇》、《我愿意》、《中国合伙人》等。2011年《让子弹飞》获得第48届台湾电影金马奖最佳音效提名。2013年《画皮Ⅱ》获得2012年度中国电影电视技术学会声音制作优秀作品奖一等奖。2014年《温故一九四二》获得2013年度中国电影电视技术学会声音制作优秀作品奖一等奖。2015年《无人区》获得2014年度中国电影电视技术学会声音制作优秀作品奖一等奖。2014年《一代宗师》获得第61届美国音效剪辑者协会（MPSE）“金卷轴”奖（Golden Reel Awards）最佳外语片音效剪辑奖。2015年《狼图腾》获得第30届中国电影金鸡奖最佳录音提名。2018年《绣春刀Ⅱ：修罗战场》获得第12届亚洲电影大奖最佳音响提名。2019年《动物世界》获得第32届中国电影金鸡奖最佳录音提名。');
+INSERT INTO `sys_actor` VALUES (26, '沈腾', '[\"/images/actor/modern/shen-teng.jpg\"]', 180.00, NULL, 1, '解放军艺术学院', '汉族', NULL, '天秤座', '中国', '中国内地男演员、导演，代表作品包括《夏洛特烦恼》《独行月球》《满江红》等。');
+INSERT INTO `sys_actor` VALUES (27, '贾玲', '[\"/images/actor/modern/jia-ling.jpg\"]', 166.00, NULL, 0, '中央戏剧学院', '汉族', NULL, '金牛座', '中国', '中国内地女演员、导演、编剧，导演并主演电影《你好，李焕英》《热辣滚烫》。');
+INSERT INTO `sys_actor` VALUES (28, '易烊千玺', '[\"/images/actor/modern/yi-yangqianxi.jpg\"]', 178.00, NULL, 1, '中央戏剧学院', '汉族', NULL, '射手座', '中国', '中国内地男演员、歌手，出演《长津湖》《满江红》等电影。');
+INSERT INTO `sys_actor` VALUES (29, '雷佳音', '[\"/images/actor/modern/lei-jiayin.jpg\"]', 184.00, NULL, 1, '上海戏剧学院', '汉族', NULL, '处女座', '中国', '中国内地男演员，出演《满江红》《热辣滚烫》《惊蛰无声》等电影。');
+INSERT INTO `sys_actor` VALUES (30, '朱一龙', '[\"/images/actor/modern/zhu-yilong.jpg\"]', 180.00, NULL, 1, '北京电影学院', '汉族', NULL, '白羊座', '中国', '中国内地男演员，出演《人生大事》《河边的错误》《惊蛰无声》等作品。');
+INSERT INTO `sys_actor` VALUES (31, '朱亚文', '[\"/images/actor/modern/zhu-yawen.jpg\"]', 182.00, NULL, 1, '北京电影学院', '汉族', NULL, '金牛座', '中国', '中国内地男演员，出演《悬崖之上》《长津湖》等电影。');
+INSERT INTO `sys_actor` VALUES (32, '吕艳婷', '[\"/images/actor/modern/lu-yanting.webp\"]', NULL, NULL, 0, NULL, '汉族', NULL, NULL, '中国', '中国配音演员，为动画电影《哪吒之魔童降世》《哪吒之魔童闹海》中的哪吒配音。');
+INSERT INTO `sys_actor` VALUES (33, '马丽', '[\"/images/actor/modern/ma-li.jpg\"]', 168.00, NULL, 0, '中央戏剧学院', '汉族', NULL, '巨蟹座', '中国', '中国内地女演员，出演《独行月球》《第二十条》等电影。');
+INSERT INTO `sys_actor` VALUES (34, '张小斐', '[\"/images/actor/modern/zhang-xiaofei.jpg\"]', 170.00, NULL, 0, '北京电影学院', '汉族', NULL, '摩羯座', '中国', '中国内地女演员，出演《你好，李焕英》《热辣滚烫》等电影。');
 
 -- ----------------------------
 -- Table structure for sys_actor_movie
@@ -165,6 +174,29 @@ INSERT INTO `sys_actor_movie` VALUES (19, 16, 2);
 INSERT INTO `sys_actor_movie` VALUES (19, 20, 1);
 INSERT INTO `sys_actor_movie` VALUES (20, 16, 2);
 INSERT INTO `sys_actor_movie` VALUES (20, 18, 1);
+INSERT INTO `sys_actor_movie` VALUES (21, 1, 2);
+INSERT INTO `sys_actor_movie` VALUES (21, 4, 2);
+INSERT INTO `sys_actor_movie` VALUES (22, 3, 2);
+INSERT INTO `sys_actor_movie` VALUES (23, 26, 2);
+INSERT INTO `sys_actor_movie` VALUES (23, 33, 2);
+INSERT INTO `sys_actor_movie` VALUES (24, 3, 2);
+INSERT INTO `sys_actor_movie` VALUES (24, 7, 2);
+INSERT INTO `sys_actor_movie` VALUES (25, 1, 2);
+INSERT INTO `sys_actor_movie` VALUES (25, 26, 2);
+INSERT INTO `sys_actor_movie` VALUES (25, 28, 2);
+INSERT INTO `sys_actor_movie` VALUES (25, 29, 2);
+INSERT INTO `sys_actor_movie` VALUES (26, 27, 1);
+INSERT INTO `sys_actor_movie` VALUES (26, 27, 2);
+INSERT INTO `sys_actor_movie` VALUES (26, 29, 2);
+INSERT INTO `sys_actor_movie` VALUES (26, 34, 2);
+INSERT INTO `sys_actor_movie` VALUES (27, 32, 2);
+INSERT INTO `sys_actor_movie` VALUES (28, 9, 2);
+INSERT INTO `sys_actor_movie` VALUES (28, 28, 2);
+INSERT INTO `sys_actor_movie` VALUES (28, 29, 2);
+INSERT INTO `sys_actor_movie` VALUES (28, 30, 2);
+INSERT INTO `sys_actor_movie` VALUES (21, 31, 2);
+INSERT INTO `sys_actor_movie` VALUES (22, 28, 2);
+INSERT INTO `sys_actor_movie` VALUES (22, 31, 2);
 
 -- ----------------------------
 -- Table structure for sys_actor_role
@@ -226,17 +258,17 @@ INSERT INTO `sys_bill` VALUES (13, 1, 1, 29, '[\"9排15座\"]', '2023-10-26 00:2
 -- 将课程演示订单统一调整到 2026 年 10 月以后，避免订单列表展示过期数据。
 UPDATE `sys_bill`
 SET `bill_date` = CASE `bill_id`
-  WHEN 1 THEN '2026-10-20 16:44:02'
-  WHEN 2 THEN '2026-10-24 16:15:04'
-  WHEN 3 THEN '2026-10-21 16:42:33'
-  WHEN 4 THEN '2026-10-23 21:47:31'
-  WHEN 6 THEN '2026-10-20 16:42:33'
-  WHEN 7 THEN '2026-10-26 10:13:14'
-  WHEN 9 THEN '2026-10-26 10:13:49'
-  WHEN 10 THEN '2026-10-27 14:21:26'
-  WHEN 11 THEN '2026-10-28 18:27:38'
-  WHEN 12 THEN '2026-10-29 20:28:35'
-  WHEN 13 THEN '2026-10-30 19:29:14'
+  WHEN 1 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:44:02')
+  WHEN 2 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:15:04')
+  WHEN 3 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '16:42:33')
+  WHEN 4 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '21:47:31')
+  WHEN 6 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:42:33')
+  WHEN 7 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:13:14')
+  WHEN 9 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:13:49')
+  WHEN 10 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '14:21:26')
+  WHEN 11 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '18:27:38')
+  WHEN 12 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '20:28:35')
+  WHEN 13 THEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '19:29:14')
   ELSE `bill_date`
 END;
 
@@ -442,6 +474,41 @@ INSERT INTO `sys_movie` VALUES (17, '寻梦环游记', 'Coco', 105, '[\"/images/
 INSERT INTO `sys_movie` VALUES (18, '我不是药神', 'Dying To Survive', 117, '[\"/images/movie/2020/12/15/5711f4fa70ec4d53b714af51b2dc1819.jpg\"]', 1, 3, '2018-07-05 00:00:00', 4.0, 0.00, 2, '一位不速之客的意外到访，打破了神油店老板程勇（徐峥 饰）的平凡人生，他从一个交不起房租的男性保健品商贩，一跃成为印度仿制药“格列宁”的独家代理商。收获巨额利润的他，生活剧烈变化，被病患们冠以“药神”的称号。但是，一场关于救赎的拉锯战也在波涛暗涌中慢慢展开......', '[]');
 INSERT INTO `sys_movie` VALUES (19, '火力全开', 'Open Fire', 85, '[\"/images/movie/2020/12/15/e29341a6bf4640f7a6fb69442cade734.jpg\"]', 6, 4, '2017-10-20 00:00:00', 8.5, 0.00, 1, '《火力全开》主要描述了王力宏火力全开演唱会从台前幕后准备到成型再到演出的全纪实，并且在其中穿插很多他从小到大的励志往事。《火力全开》记录的不只是场表演，更记录了这场演唱会从筹备到完成的思想和精神。这部电影忠实记录华语流行演唱会在现今的状态，并呈现出王力宏的音乐创作概念与历程、舞台下平易近人又生活化的一面，以及对梦想的坚持和发光。无论观众是不是王力宏的歌迷，都能从中一窥音乐之于世界的力量，成为东西方文化交流的种子。', '[]');
 INSERT INTO `sys_movie` VALUES (20, '疯狂动物城', 'Zootopia', 109, '[\"/images/movie/2020/12/15/190e45b2f62e414aae5f25c54df23c6d.jpg\"]', 2, 5, '2016-03-04 00:00:00', 9.5, 0.00, 2, '故事发生在一个所有哺乳类动物和谐共存的美好世界中，兔子朱迪（金妮弗·古德温 Ginnifer Goodwin 配音）从小就梦想着能够成为一名惩恶扬善的刑警，凭借着智慧和努力，朱迪成功的从警校中毕业进入了疯狂动物城警察局，殊不知这里是大型肉食类动物的领地，作为第一只，也是唯一的小型食草类动物，朱迪会遇到怎样的故事呢？ 近日里，城中接连发生动物失踪案件，就在全部警员都致力于调查案件真相之时，朱迪却被局长（伊德瑞斯·艾尔巴 Idris Elba 配音）发配成为了一名无足轻重的交警。某日，正在执勤的兔子遇见了名为尼克（杰森·贝特曼 Jason Bateman 配音）的狐狸，两人不打不相识，之后又误打误撞的接受了寻找失踪的水獭先生的任务，如果不能在两天之内找到水獭先生，朱迪就必须自愿离开警局。朱迪找到了尼克，两人联手揭露了一个隐藏在疯狂动物城之中的惊天秘密。', '[]');
+INSERT INTO `sys_movie` VALUES (21, '悬崖之上', 'Cliff Walkers', 120, '[\"/images/movie/modern/cliff-walkers.jpg\"]', 1, 1, '2021-04-30 00:00:00', 9.1, 119000.00, 1, '四名特工组成任务小队，在严峻环境与重重危机中执行秘密行动。', '[]');
+INSERT INTO `sys_movie` VALUES (22, '长津湖', 'The Battle at Lake Changjin', 176, '[\"/images/movie/modern/lake-changjin.jpg\"]', 1, 1, '2021-09-30 00:00:00', 9.3, 577500.00, 1, '影片以抗美援朝战争中的长津湖战役为背景，展现志愿军战士的坚毅与担当。', '[]');
+INSERT INTO `sys_movie` VALUES (23, '独行月球', 'Moon Man', 122, '[\"/images/movie/modern/moon-man.jpg\"]', 1, 1, '2022-07-29 00:00:00', 9.0, 310300.00, 1, '月球维修工意外成为留在月球上的最后一人，由此展开一段充满笑泪的求生旅程。', '[]');
+INSERT INTO `sys_movie` VALUES (24, '流浪地球2', 'The Wandering Earth II', 173, '[\"/images/movie/modern/wandering-earth-2.jpg\"]', 1, 1, '2023-01-22 00:00:00', 9.4, 402900.00, 1, '太阳危机逐步逼近，人类围绕不同解决方案展开探索，共同面对文明存续的挑战。', '[]');
+INSERT INTO `sys_movie` VALUES (25, '满江红', 'Full River Red', 159, '[\"/images/movie/modern/full-river-red.jpg\"]', 1, 1, '2023-01-22 00:00:00', 8.8, 454400.00, 1, '一场发生在大宅中的谜案牵出多方人物，众人在层层反转中寻找真相。', '[]');
+INSERT INTO `sys_movie` VALUES (26, '热辣滚烫', 'YOLO', 129, '[\"/images/movie/modern/yolo.jpg\"]', 1, 1, '2024-02-10 00:00:00', 8.9, 346000.00, 1, '一个普通人在重新认识自己、坚持训练的过程中，逐渐找到人生方向。', '[]');
+INSERT INTO `sys_movie` VALUES (27, '哪吒之魔童闹海', 'Ne Zha 2', 144, '[\"/images/movie/modern/ne-zha-2.jpg\"]', 1, 1, '2025-01-29 00:00:00', 9.5, 0.00, 1, '哪吒与伙伴迎接新的考验，在成长与选择中守护珍视的人和家园。', '[]');
+INSERT INTO `sys_movie` VALUES (28, '惊蛰无声', 'Silent Awakening', 105, '[\"/images/movie/modern/awakening-of-insects.jpg\"]', 1, 1, '2026-10-01 00:00:00', 9.2, 0.00, 1, '国安小组围绕涉密信息外泄展开行动，在信任与背叛之间追查隐藏的线索。', '[]');
+
+-- 新增影片至少保留一张可预览剧照，详情页不再出现空图集。
+UPDATE `sys_movie`
+SET `movie_pictures` = `movie_poster`
+WHERE `movie_id` BETWEEN 21 AND 28;
+
+-- 演示影片日期随导入日滚动，确保“正在热映”和“即将上映”始终有数据。
+UPDATE `sys_movie`
+SET `release_date` = CASE `movie_id`
+  WHEN 1 THEN DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+  WHEN 2 THEN DATE_SUB(CURDATE(), INTERVAL 4 DAY)
+  WHEN 3 THEN DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+  WHEN 4 THEN DATE_SUB(CURDATE(), INTERVAL 8 DAY)
+  WHEN 5 THEN DATE_SUB(CURDATE(), INTERVAL 10 DAY)
+  WHEN 6 THEN DATE_SUB(CURDATE(), INTERVAL 12 DAY)
+  WHEN 7 THEN DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+  WHEN 8 THEN DATE_SUB(CURDATE(), INTERVAL 16 DAY)
+  WHEN 21 THEN DATE_SUB(CURDATE(), INTERVAL 18 DAY)
+  WHEN 22 THEN DATE_SUB(CURDATE(), INTERVAL 20 DAY)
+  WHEN 23 THEN DATE_SUB(CURDATE(), INTERVAL 22 DAY)
+  WHEN 24 THEN DATE_SUB(CURDATE(), INTERVAL 24 DAY)
+  WHEN 25 THEN DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+  WHEN 26 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+  WHEN 27 THEN DATE_ADD(CURDATE(), INTERVAL 9 DAY)
+  WHEN 28 THEN DATE_ADD(CURDATE(), INTERVAL 12 DAY)
+  ELSE `release_date`
+END;
 
 -- ----------------------------
 -- Table structure for sys_movie_age
@@ -593,12 +660,33 @@ INSERT INTO `sys_movie_comment` VALUES (17, 1, '2020-12-22 11:13:04', '满分作
 INSERT INTO `sys_movie_comment` VALUES (18, 1, '2020-12-22 11:13:01', '一般', 6);
 INSERT INTO `sys_movie_comment` VALUES (18, 1, '2020-12-23 14:34:08', '就是难看', 2);
 INSERT INTO `sys_movie_comment` VALUES (19, 1, '2020-12-22 11:12:36', '还不错', 9);
+INSERT INTO `sys_movie_comment` VALUES (21, 1, DATE_SUB(NOW(), INTERVAL 8 DAY), '雪夜氛围和人物群像很有张力。', 9);
+INSERT INTO `sys_movie_comment` VALUES (21, 3, DATE_SUB(NOW(), INTERVAL 7 DAY), '节奏紧凑，表演也很扎实。', 9);
+INSERT INTO `sys_movie_comment` VALUES (22, 1, DATE_SUB(NOW(), INTERVAL 7 DAY), '战争场面震撼，值得在大银幕观看。', 10);
+INSERT INTO `sys_movie_comment` VALUES (22, 2, DATE_SUB(NOW(), INTERVAL 6 DAY), '人物情感真挚，很有力量。', 9);
+INSERT INTO `sys_movie_comment` VALUES (23, 1, DATE_SUB(NOW(), INTERVAL 6 DAY), '科幻和喜剧结合得很自然。', 9);
+INSERT INTO `sys_movie_comment` VALUES (23, 3, DATE_SUB(NOW(), INTERVAL 5 DAY), '有笑点也有温情，观感不错。', 8);
+INSERT INTO `sys_movie_comment` VALUES (24, 1, DATE_SUB(NOW(), INTERVAL 5 DAY), '世界观宏大，视效非常出色。', 10);
+INSERT INTO `sys_movie_comment` VALUES (24, 2, DATE_SUB(NOW(), INTERVAL 4 DAY), '国产科幻的诚意之作。', 9);
+INSERT INTO `sys_movie_comment` VALUES (25, 1, DATE_SUB(NOW(), INTERVAL 4 DAY), '悬念层层推进，反转很精彩。', 9);
+INSERT INTO `sys_movie_comment` VALUES (25, 3, DATE_SUB(NOW(), INTERVAL 3 DAY), '台词和表演都很有记忆点。', 9);
+INSERT INTO `sys_movie_comment` VALUES (26, 1, DATE_SUB(NOW(), INTERVAL 3 DAY), '热血又真诚，看完很受鼓舞。', 9);
+INSERT INTO `sys_movie_comment` VALUES (26, 2, DATE_SUB(NOW(), INTERVAL 2 DAY), '人物成长过程很有感染力。', 9);
+INSERT INTO `sys_movie_comment` VALUES (27, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), '动画制作精良，动作场面很燃。', 10);
+INSERT INTO `sys_movie_comment` VALUES (27, 3, DATE_SUB(NOW(), INTERVAL 1 DAY), '故事和视觉效果都很精彩。', 10);
+INSERT INTO `sys_movie_comment` VALUES (28, 1, DATE_SUB(NOW(), INTERVAL 1 DAY), '国安题材紧张感很强，值得期待。', 9);
+INSERT INTO `sys_movie_comment` VALUES (28, 2, NOW(), '阵容和题材都很有吸引力。', 9);
 INSERT INTO `sys_movie_comment` VALUES (20, 1, '2020-12-22 11:12:08', '好棒啊', 10);
 INSERT INTO `sys_movie_comment` VALUES (20, 1, '2020-12-22 11:13:23', '孩子很喜欢', 9);
 
--- 评论属于业务演示数据，整体平移到 2026 年 10 月并保留原有先后顺序。
+-- 评论属于业务演示数据，平移到导入日前一周并保留原有先后顺序。
 UPDATE `sys_movie_comment`
-SET `comment_time` = DATE_ADD(`comment_time`, INTERVAL 70 MONTH);
+SET `comment_time` = TIMESTAMP(
+  DATE_ADD(DATE_SUB(CURDATE(), INTERVAL 11 DAY),
+           INTERVAL DATEDIFF(DATE(`comment_time`), '2020-12-22') DAY),
+  TIME(`comment_time`)
+)
+WHERE `comment_time` < '2022-01-01';
 
 -- ----------------------------
 -- Table structure for sys_movie_runtime
@@ -707,6 +795,29 @@ INSERT INTO `sys_movie_to_category` VALUES (20, 3);
 INSERT INTO `sys_movie_to_category` VALUES (20, 8);
 INSERT INTO `sys_movie_to_category` VALUES (20, 9);
 INSERT INTO `sys_movie_to_category` VALUES (20, 10);
+INSERT INTO `sys_movie_to_category` VALUES (21, 6);
+INSERT INTO `sys_movie_to_category` VALUES (21, 4);
+INSERT INTO `sys_movie_to_category` VALUES (21, 8);
+INSERT INTO `sys_movie_to_category` VALUES (22, 4);
+INSERT INTO `sys_movie_to_category` VALUES (22, 12);
+INSERT INTO `sys_movie_to_category` VALUES (22, 19);
+INSERT INTO `sys_movie_to_category` VALUES (23, 2);
+INSERT INTO `sys_movie_to_category` VALUES (23, 7);
+INSERT INTO `sys_movie_to_category` VALUES (24, 4);
+INSERT INTO `sys_movie_to_category` VALUES (24, 7);
+INSERT INTO `sys_movie_to_category` VALUES (24, 11);
+INSERT INTO `sys_movie_to_category` VALUES (25, 2);
+INSERT INTO `sys_movie_to_category` VALUES (25, 4);
+INSERT INTO `sys_movie_to_category` VALUES (25, 8);
+INSERT INTO `sys_movie_to_category` VALUES (25, 16);
+INSERT INTO `sys_movie_to_category` VALUES (26, 2);
+INSERT INTO `sys_movie_to_category` VALUES (26, 4);
+INSERT INTO `sys_movie_to_category` VALUES (27, 2);
+INSERT INTO `sys_movie_to_category` VALUES (27, 3);
+INSERT INTO `sys_movie_to_category` VALUES (27, 4);
+INSERT INTO `sys_movie_to_category` VALUES (27, 13);
+INSERT INTO `sys_movie_to_category` VALUES (28, 4);
+INSERT INTO `sys_movie_to_category` VALUES (28, 10);
 
 -- ----------------------------
 -- Table structure for sys_resource
@@ -910,23 +1021,41 @@ INSERT INTO `sys_session` VALUES (27, 1, 7, '国语2D', 1, 1, '2020-12-26', 1, 6
 INSERT INTO `sys_session` VALUES (28, 1, 1, '国语2D', 8, 4, '2020-12-26', 1, 45.00, NULL, '{\"1\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"2\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"3\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"4\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"5\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"6\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"7\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"8\": [0, 0, 0, 0, 1, 1, 0, 0, 0, 0], \"9\": [0, 0, 0, 0, 1, 1, 0, 0, 0, 0], \"10\": [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]}', 0);
 INSERT INTO `sys_session` VALUES (29, 1, 7, '英语', 2, 1, '2023-10-26', 1, 12.00, '12', '{\"1\": [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1], \"2\": [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], \"3\": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], \"4\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"5\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"6\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"7\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"8\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"9\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0], \"10\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"11\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"12\": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], \"13\": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], \"14\": [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], \"15\": [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]}', 0);
 
+-- 为新增影片安排可购买场次，复用已验证的影厅座位布局。
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 30, `cinema_id`, `hall_id`, '国语2D', 21, 1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), 1, 39.00, '免费停车3小时', `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 16;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 31, `cinema_id`, `hall_id`, '国语IMAX', 22, 7, DATE_ADD(CURDATE(), INTERVAL 2 DAY), 1, 59.00, 'IMAX厅', `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 18;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 32, `cinema_id`, `hall_id`, '国语2D', 23, 5, DATE_ADD(CURDATE(), INTERVAL 3 DAY), 1, 42.00, NULL, `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 16;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 33, `cinema_id`, `hall_id`, '国语IMAX', 24, 7, DATE_ADD(CURDATE(), INTERVAL 4 DAY), 1, 69.00, 'IMAX厅', `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 18;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 34, `cinema_id`, `hall_id`, '国语2D', 25, 4, DATE_ADD(CURDATE(), INTERVAL 5 DAY), 1, 45.00, NULL, `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 16;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 35, `cinema_id`, `hall_id`, '国语2D', 26, 5, DATE_ADD(CURDATE(), INTERVAL 6 DAY), 1, 43.00, '女士观影专场', `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 16;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 36, `cinema_id`, `hall_id`, '国语IMAX', 27, 7, DATE_ADD(CURDATE(), INTERVAL 7 DAY), 1, 65.00, 'IMAX动画厅', `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 18;
+INSERT INTO `sys_session` (`session_id`, `cinema_id`, `hall_id`, `language_version`, `movie_id`, `movie_runtime_id`, `session_date`, `session_state`, `session_price`, `session_tips`, `session_seats`, `seat_nums`)
+SELECT 37, `cinema_id`, `hall_id`, '国语2D', 28, 4, DATE_ADD(CURDATE(), INTERVAL 8 DAY), 1, 46.00, NULL, `session_seats`, 0 FROM `sys_session` WHERE `session_id` = 16;
+
 -- 场次安排在当前课程验收周期，确保前台有可购买的未来场次。
 UPDATE `sys_session`
 SET `session_date` = CASE `session_id`
-  WHEN 16 THEN '2026-11-03'
-  WHEN 17 THEN '2026-11-03'
-  WHEN 18 THEN '2026-11-03'
-  WHEN 19 THEN '2026-11-04'
-  WHEN 20 THEN '2026-11-04'
-  WHEN 21 THEN '2026-11-05'
-  WHEN 22 THEN '2026-11-05'
-  WHEN 23 THEN '2026-11-06'
-  WHEN 24 THEN '2026-11-06'
-  WHEN 25 THEN '2026-11-07'
-  WHEN 26 THEN '2026-11-07'
-  WHEN 27 THEN '2026-11-08'
-  WHEN 28 THEN '2026-11-08'
-  WHEN 29 THEN '2026-11-08'
+  WHEN 16 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+  WHEN 17 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+  WHEN 18 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+  WHEN 19 THEN DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+  WHEN 20 THEN DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+  WHEN 21 THEN DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+  WHEN 22 THEN DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+  WHEN 23 THEN DATE_ADD(CURDATE(), INTERVAL 4 DAY)
+  WHEN 24 THEN DATE_ADD(CURDATE(), INTERVAL 4 DAY)
+  WHEN 25 THEN DATE_ADD(CURDATE(), INTERVAL 5 DAY)
+  WHEN 26 THEN DATE_ADD(CURDATE(), INTERVAL 5 DAY)
+  WHEN 27 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+  WHEN 28 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+  WHEN 29 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
   ELSE `session_date`
 END;
 
@@ -997,5 +1126,17 @@ INSERT INTO `sys_user_hobby` VALUES (12, '公益');
 INSERT INTO `sys_user_hobby` VALUES (13, '汽车');
 INSERT INTO `sys_user_hobby` VALUES (14, '时尚');
 INSERT INTO `sys_user_hobby` VALUES (15, '宠物');
+
+-- 课程演示常用查询索引与业务唯一约束。
+ALTER TABLE `sys_user` ADD UNIQUE KEY `uk_sys_user_name` (`user_name`);
+ALTER TABLE `sys_bill`
+  ADD KEY `idx_sys_bill_user_date` (`user_id`, `bill_date`),
+  ADD KEY `idx_sys_bill_session` (`session_id`);
+ALTER TABLE `sys_session`
+  ADD KEY `idx_sys_session_cinema_date` (`cinema_id`, `session_date`),
+  ADD KEY `idx_sys_session_movie_date` (`movie_id`, `session_date`),
+  ADD KEY `idx_sys_session_hall_date` (`hall_id`, `session_date`);
+ALTER TABLE `sys_movie_comment`
+  ADD KEY `idx_movie_comment_user_time` (`user_id`, `comment_time`);
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -1,5 +1,6 @@
 package com.gouyan.system.domin;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +25,10 @@ public class SysUser implements Serializable {
     private String userName;
     //密码
     @NotBlank(message = "密码不能为空")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     //盐
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String salt;
     //邮箱
     @Email(message = "邮箱格式有误")

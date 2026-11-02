@@ -1,0 +1,34 @@
+.request-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 100%;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  overflow: hidden;
+  transition: opacity .2s ease;
+}
+
+.request-progress::after {
+  content: '';
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: #409eff;
+  box-shadow: 0 0 8px #409eff;
+  transform: translateX(-110%);
+}
+
+.request-progress.is-active {
+  opacity: 1;
+}
+
+.request-progress.is-active::after {
+  animation: request-progress-moving 1.1s ease-in-out infinite;
+}
+
+@keyframes request-progress-moving {
+  to { transform: translateX(330%); }
+}

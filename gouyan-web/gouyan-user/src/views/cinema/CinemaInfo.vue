@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <div v-loading="loading" element-loading-text="正在加载影院详情">
+    <content-skeleton v-if="!loaded" type="detail" />
+    <template v-else>
     <div class="header">
       <div class="header-inner clearfix">
         <div class="movie-info-left">
@@ -71,6 +73,7 @@
             <div class="session-info">
               <el-table
                   :data="sessionDict[activeDate]"
+                  empty-text="暂无可售场次"
                   stripe
                   style="width: 100%">
                 <el-table-column
@@ -109,13 +112,16 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script>
 import moment from 'moment'
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "CinemaInfo",
+  components: { ContentSkeleton },
   data() {
     return {
       cinemaId: this.$route.params.cinemaId,
@@ -153,7 +159,9 @@ export default {
       activeMovie: 0,
       activeDate: '',
       left: 0,
-      movieListWidth: 0
+      movieListWidth: 0,
+      loading: true,
+      loaded: false
     }
   },
   watch:{
@@ -166,9 +174,11 @@ export default {
   },
   methods:{
     async getCinemaMovieList(){
-      const { data : res} = await axios.get('sysCinema/find/' + this.cinemaId)
-      this.cinemaInfo = res.data.cinema
-      this.sessions = res.data.sessions
+      this.loading = true
+      try {
+        const { data : res} = await axios.get('sysCinema/find/' + this.cinemaId)
+        this.cinemaInfo = res.data.cinema
+        this.sessions = res.data.sessions
       //解析图片
       this.cinemaInfo.cinemaPicture = (JSON.parse(this.cinemaInfo.cinemaPicture)).map((obj, index) => {
         return this.global.base + obj
@@ -193,7 +203,11 @@ export default {
           this.sessionDict[session.sessionDate] = []
         this.sessionDict[session.sessionDate].push(session)
       }
-      this.activeDate = this.sessions.length === 0 ? '': this.sessions[0].sessionDate
+        this.activeDate = this.sessions.length === 0 ? '': this.sessions[0].sessionDate
+        this.loaded = true
+      } finally {
+        this.loading = false
+      }
     },
     async getNewSessionList(){
       const { data : res} = await axios.get('sysCinema/find/' + this.cinemaId + '/' + this.activeMovie)

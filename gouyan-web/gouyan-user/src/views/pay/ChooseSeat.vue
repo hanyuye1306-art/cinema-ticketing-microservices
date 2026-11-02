@@ -69,7 +69,7 @@
               <span style="font-size: 20px;color: #f03d37">￥{{session.sessionPrice * pickedSeats.length}}</span>
             </div>
             <div style="text-align: center;margin-top: 30px">
-              <el-button type="danger" round @click="submitBill">提交订单</el-button>
+              <el-button type="danger" round :loading="submitting" :disabled="submitting || pickedSeats.length === 0" @click="submitBill">提交订单</el-button>
             </div>
           </div>
         </div>
@@ -102,6 +102,7 @@ export default {
         sysMovieRuntime: {}
       },
       pickedSeats: [],
+      submitting: false,
       addForm:{
         userId: 0,
         sessionId: 0,
@@ -144,18 +145,26 @@ export default {
       console.log(this.pickedSeats)
     },
     async submitBill(){
+      if (this.submitting || this.pickedSeats.length === 0) {
+        if (this.pickedSeats.length === 0) this.$message.warning('请至少选择一个座位')
+        return
+      }
+      this.submitting = true
       this.addForm.userId = JSON.parse(window.sessionStorage.getItem('loginUser')).userId
       this.addForm.sessionId = this.sessionId
       this.addForm.seats = JSON.stringify(this.pickedSeats)
       console.log(this.addForm)
       axios.defaults.headers.post['Content-Type'] = 'application/json'
-      const { data: res} = await axios.post('sysBill', JSON.stringify(this.addForm));
-      if(res.code != 200) {
-        this.$message.error('添加订单失败！');
-        return
+      try {
+        const { data: res} = await axios.post('sysBill', JSON.stringify(this.addForm));
+        if(res.code != 200) {
+          this.$message.error('添加订单失败！');
+          return
+        }
+        this.$router.push('/billDetail/' + res.data.billId)
+      } finally {
+        this.submitting = false
       }
-      console.log(res.data)
-      this.$router.push('/billDetail/' + res.data.billId)
     }
   }
 }

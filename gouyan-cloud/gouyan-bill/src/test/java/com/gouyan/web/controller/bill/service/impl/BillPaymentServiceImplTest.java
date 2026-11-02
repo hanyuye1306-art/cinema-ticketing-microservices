@@ -37,9 +37,9 @@ class BillPaymentServiceImplTest {
 
     @Test
     void missingSessionDoesNotMarkBillAsPaid() {
-        SysBill persisted = bill(1L, false, 99L, "1排1号");
+        SysBill persisted = bill(1L, false, 99L, "[\"1排1号\"]");
         when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);
-        when(sessionMapper.findOne(99L)).thenReturn(null);
+        when(sessionMapper.findOneForUpdate(99L)).thenReturn(null);
 
         assertThrows(DataNotFoundException.class,
                 () -> paymentService.updateBill(paymentRequest(1L, "{}")));
@@ -50,7 +50,7 @@ class BillPaymentServiceImplTest {
 
     @Test
     void repeatedPaymentIsIdempotent() {
-        SysBill persisted = bill(1L, true, 10L, "1排1号");
+        SysBill persisted = bill(1L, true, 10L, "[\"1排1号\"]");
         when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);
 
         assertEquals(1, paymentService.updateBill(paymentRequest(1L, "{}")));
@@ -62,16 +62,17 @@ class BillPaymentServiceImplTest {
 
     @Test
     void successfulPaymentUpdatesBillSessionAndBoxOfficeOnce() {
-        SysBill persisted = bill(1L, false, 10L, "1排1号,1排2号");
+        SysBill persisted = bill(1L, false, 10L, "[\"1排1号\",\"1排2号\"]");
         SysSession session = new SysSession();
         session.setSessionId(10L);
         session.setMovieId(20L);
         session.setSessionPrice(35.0);
+        session.setSessionSeats("{\"1\":[0,0]}");
         SysMovie movie = new SysMovie();
         movie.setMovieId(20L);
         movie.setMovieBoxOffice(100.0);
         when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);
-        when(sessionMapper.findOne(10L)).thenReturn(session);
+        when(sessionMapper.findOneForUpdate(10L)).thenReturn(session);
         when(movieMapper.findOne(20L)).thenReturn(movie);
         when(billMapper.update(any(SysBill.class))).thenReturn(1);
         when(sessionMapper.update(any(SysSession.class))).thenReturn(1);
@@ -83,6 +84,28 @@ class BillPaymentServiceImplTest {
         verify(movieMapper).update(movieCaptor.capture());
         assertEquals(170.0, movieCaptor.getValue().getMovieBoxOffice(), 0.001);
         assertEquals("{\"1\":[3,3]}", session.getSessionSeats());
+    }
+
+    @Test
+    void soldSeatIsRejectedBeforeAnyUpdate() {
+        SysBill persisted = bill(1L, false, 10L, "[\"1排1号\"]");
+        SysSession session = new SysSession();
+        session.setSessionId(10L);
+        session.setMovieId(20L);
+        session.setSessionPrice(35.0);
+        session.setSessionSeats("{\"1\":[3]}");
+        SysMovie movie = new SysMovie();
+        movie.setMovieId(20L);
+        movie.setMovieBoxOffice(100.0);
+        when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);
+        when(sessionMapper.findOneForUpdate(10L)).thenReturn(session);
+        when(movieMapper.findOne(20L)).thenReturn(movie);
+        when(billMapper.update(any(SysBill.class))).thenReturn(1);
+
+        assertThrows(IllegalStateException.class,
+                () -> paymentService.updateBill(paymentRequest(1L, null)));
+        verify(sessionMapper, never()).update(any(SysSession.class));
+        verify(movieMapper, never()).update(any(SysMovie.class));
     }
 
     @Test
@@ -121,16 +144,17 @@ class BillPaymentServiceImplTest {
     }
 
     private void prepareUnpaidPayment() {
-        SysBill persisted = bill(1L, false, 10L, "1排1号");
+        SysBill persisted = bill(1L, false, 10L, "[\"1排1号\"]");
         SysSession session = new SysSession();
         session.setSessionId(10L);
         session.setMovieId(20L);
         session.setSessionPrice(35.0);
+        session.setSessionSeats("{\"1\":[0]}");
         SysMovie movie = new SysMovie();
         movie.setMovieId(20L);
         movie.setMovieBoxOffice(100.0);
         when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);
-        when(sessionMapper.findOne(10L)).thenReturn(session);
+        when(sessionMapper.findOneForUpdate(10L)).thenReturn(session);
         when(movieMapper.findOne(20L)).thenReturn(movie);
     }
 

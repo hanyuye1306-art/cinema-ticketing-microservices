@@ -76,6 +76,19 @@ MySQL root 为空密码时：
 ./scripts/start-all.sh
 ```
 
+建议同时为 JWT 设置独立随机密钥（不要提交到仓库）：
+
+```bash
+JWT_SECRET='至少32位随机字符串' ./scripts/start-all.sh
+```
+
+两个 Vue 项目通过 `VUE_APP_API_BASE_URL` 配置 API 地址，未设置时默认使用
+`http://127.0.0.1:8181`。生产构建示例：
+
+```bash
+VUE_APP_API_BASE_URL='https://api.example.com' npm run build
+```
+
 MySQL root 有密码时，只对当前命令注入密码：
 
 ```bash

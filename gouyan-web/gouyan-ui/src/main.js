@@ -12,10 +12,28 @@ import global_variable from "@/components/global_variable";
 
 Vue.prototype.global = global_variable
 
-axios.defaults.baseURL = 'http://127.0.0.1:8181'
+axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8181'
+let pendingRequestCount = 0
+
+function startRequestLoading() {
+  pendingRequestCount += 1
+  document.body.classList.add('admin-request-loading')
+}
+
+function finishRequestLoading() {
+  pendingRequestCount = Math.max(0, pendingRequestCount - 1)
+  if (pendingRequestCount === 0) {
+    document.body.classList.remove('admin-request-loading')
+  }
+}
+
 axios.interceptors.request.use(config => {
+  startRequestLoading()
   config.headers.Token = window.sessionStorage.getItem('token')
   return config
+}, error => {
+  finishRequestLoading()
+  return Promise.reject(error)
 })
 
 // 状态码错误信息
@@ -33,11 +51,14 @@ const codeMessage = {
 };
 
 axios.interceptors.response.use(response => {
+  finishRequestLoading()
   return response
 }, error => {
+  finishRequestLoading()
   if(error){
     if(!error.response){
-      return console.log('Error', error.message);
+      Message.error('网络连接失败，请稍后重试')
+      return Promise.reject(error);
     }
     //获取状态码
     const status = error.response.status;

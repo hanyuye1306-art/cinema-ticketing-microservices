@@ -1,5 +1,7 @@
 <template>
-  <div class="actor-container">
+  <div class="actor-container" v-loading="loading" element-loading-text="正在加载影人信息">
+    <content-skeleton v-if="loading && !actorInfo.actorName" type="detail" />
+    <template v-else>
     <div class="header">
       <div class="header-inner clearfix">
         <div class="movie-info-left">
@@ -104,16 +106,19 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script>
 import pinyin from 'pinyin'
 import movieItem from '../../components/movie/movie-item'
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "ActorInfo",
   components:{
-    movieItem
+    movieItem,
+    ContentSkeleton
   },
   data() {
     return {
@@ -124,23 +129,30 @@ export default {
         actorRoleList: []
       },
       majorMovieList:[],
-      relationshipList: []
+      relationshipList: [],
+      loading: true
     }
   },
   created() {
-    this.getActorInfo()
-    this.getRelationship()
+    this.loadActorInfo()
   },
   watch:{
     '$route'(){
       this.actorId = this.$route.params.actorId
     },
     'actorId'(){
-      this.getActorInfo()
-      this.getRelationship()
+      this.loadActorInfo()
     }
   },
   methods:{
+    async loadActorInfo() {
+      this.loading = true
+      try {
+        await Promise.all([this.getActorInfo(), this.getRelationship()])
+      } finally {
+        this.loading = false
+      }
+    },
     async getActorInfo(){
       const { data: res} = await axios.get('sysActor/find/' + this.actorId)
       this.actorInfo = res.data

@@ -23,7 +23,7 @@ export default {
   },
   created() {
     const _this = this
-    axios.get('http://localhost:8181/sysMovieAge').then(function (resp){
+    axios.get('/sysMovieAge').then(function (resp){
         _this.movieAge = resp.data.data;
     })
   }

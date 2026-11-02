@@ -5,7 +5,8 @@
         <img :src="item.url" alt/>
       </el-carousel-item>
     </el-carousel>
-    <div class="whole">
+    <content-skeleton v-if="loading && !hasHomeContent" class="home-skeleton" type="cards" :count="10" />
+    <div v-else class="whole" v-loading="loading" element-loading-text="正在加载推荐内容">
       <div class="left">
         <div class="panel">
           <div class="panel-header">
@@ -84,10 +85,12 @@
 <script>
 import movieItem from '../../components/movie/movie-item'
 import moment from "moment";
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "Home",
   components: {
-    movieItem
+    movieItem,
+    ContentSkeleton
   },
   data() {
     return {
@@ -125,17 +128,34 @@ export default {
       carouselHeight: '',
       top100List: [],
       actorList: [],
+      loading: true,
     }
   },
   created() {
-    this.getOngoingMovieList()
-    this.getUpcomingMovieList()
-    this.getClassicMovieList()
     this.getHeight()
-    this.getTop100List()
-    this.getActorList()
+    this.loadHome()
+  },
+  computed: {
+    hasHomeContent() {
+      return this.ongoingMovieList.length > 0 || this.upcomingMovieList.length > 0 ||
+        this.classicMovieList.length > 0 || this.top100List.length > 0 || this.actorList.length > 0
+    }
   },
   methods:{
+    async loadHome() {
+      this.loading = true
+      try {
+        await Promise.all([
+          this.getOngoingMovieList(),
+          this.getUpcomingMovieList(),
+          this.getClassicMovieList(),
+          this.getTop100List(),
+          this.getActorList()
+        ])
+      } finally {
+        this.loading = false
+      }
+    },
     async getOngoingMovieList(){
       const { data : res } = await axios.get('sysMovie', {params: this.queryInfo1})
       this.ongoingMovieList = res.data
@@ -188,6 +208,11 @@ export default {
   width: 1200px;
   margin: 30px auto;
   display: flex;
+}
+
+.home-skeleton {
+  width: 1200px;
+  margin: 30px auto;
 }
 
 .left{

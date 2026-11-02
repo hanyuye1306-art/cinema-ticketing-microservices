@@ -63,7 +63,7 @@ public class CustomerRealm extends AuthorizingRealm {
             log.error("用户不存在)");
             throw new AuthenticationException("用户不存在");
         }
-        if (!JwtUtil.verify(token, username, user.getPassword())) {
+        if (!JwtUtil.verify(token, username)) {
             log.error("用户名或密码错误(token无效或者与登录者不匹配)");
             throw new AuthenticationException("用户名或密码错误(token无效或者与登录者不匹配)");
         }

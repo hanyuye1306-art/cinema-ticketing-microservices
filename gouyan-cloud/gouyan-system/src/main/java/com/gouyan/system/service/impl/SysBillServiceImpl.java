@@ -3,6 +3,7 @@ package com.gouyan.system.service.impl;
 import com.gouyan.system.domin.SysBill;
 import com.gouyan.system.mapper.SysBillMapper;
 import com.gouyan.system.service.SysBillService;
+import com.gouyan.common.exception.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,13 @@ public class SysBillServiceImpl implements SysBillService {
     public int delete(Long[] ids) {
         int rows = 0;
         for(Long id : ids){
+            SysBill bill = sysBillMapper.findById(id);
+            if (bill == null) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(bill.getBillState())) {
+                throw new DataNotFoundException("已支付订单不能直接删除");
+            }
             rows += sysBillMapper.delete(id);
         }
         return rows;

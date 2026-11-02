@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <div class="movie-list">
+  <div v-loading="loading" element-loading-text="正在加载电影">
+    <content-skeleton v-if="loading && movieList.length === 0" type="cards" :count="10" />
+    <div class="movie-list" v-else>
       <movie-item :movieItem="item" v-for="item in movieList" :key="item.movieId"></movie-item>
     </div>
 
@@ -24,10 +25,12 @@
 <script>
 import movieItem from '../../components/movie/movie-item'
 import moment from 'moment'
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "MovieUpcoming",
   components:{
-    movieItem
+    movieItem,
+    ContentSkeleton
   },
   props:{
     movieCategoryId: Number,
@@ -42,7 +45,8 @@ export default {
       pageNum: 1,
       startDate: moment().format("YYYY-MM-DD"),
       movieList: [],
-      sorry: false
+      sorry: false,
+      loading: false
     }
   },
   computed: {
@@ -61,6 +65,7 @@ export default {
   },
   methods: {
     async getMovieList(){
+      this.loading = true
       let queryInfo = {
         movieCategoryId: this.movieCategoryId,
         movieAgeId: this.movieAgeId,
@@ -71,11 +76,14 @@ export default {
         startDate: this.startDate,
         isAsc: 'desc'
       }
-      const { data : res } = await axios.get('sysMovie', {params: queryInfo})
-      this.movieList = res.data
-      this.total = res.total
-      if(this.movieList.length === 0) this.sorry = true
-      else this.sorry = false
+      try {
+        const { data : res } = await axios.get('sysMovie', {params: queryInfo})
+        this.movieList = res.data
+        this.total = res.total
+        this.sorry = this.movieList.length === 0
+      } finally {
+        this.loading = false
+      }
     },
     handleCurrentChange(newPage) {
       this.pageNum = newPage

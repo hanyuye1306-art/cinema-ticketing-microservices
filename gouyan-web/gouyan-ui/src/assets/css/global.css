@@ -33,3 +33,33 @@ html, body, #app{
 .el-pagination {
     margin-top: 15px;
 }
+/* 管理端表格请求完成前显示加载骨架，避免先闪出 Element 默认的“暂无数据”。 */
+.admin-request-loading .el-table__empty-block {
+  min-height: 220px;
+  background:
+    linear-gradient(#f3f5f7 0 0) 24px 34px / 16% 16px no-repeat,
+    linear-gradient(#f3f5f7 0 0) 24% 34px / 22% 16px no-repeat,
+    linear-gradient(#f3f5f7 0 0) 54% 34px / 18% 16px no-repeat,
+    linear-gradient(#f3f5f7 0 0) 80% 34px / 14% 16px no-repeat,
+    linear-gradient(#f6f7f9 0 0) 0 78px / 100% 1px no-repeat,
+    linear-gradient(#f3f5f7 0 0) 24px 105px / 70% 14px no-repeat,
+    linear-gradient(#f6f7f9 0 0) 0 146px / 100% 1px no-repeat,
+    linear-gradient(#f3f5f7 0 0) 24px 173px / 58% 14px no-repeat;
+}
+
+.admin-request-loading .el-table__empty-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .75), transparent);
+  animation: admin-table-loading 1.35s infinite;
+}
+
+.admin-request-loading .el-table__empty-text {
+  visibility: hidden;
+}
+
+@keyframes admin-table-loading {
+  to { transform: translateX(100%); }
+}

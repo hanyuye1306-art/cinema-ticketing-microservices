@@ -29,6 +29,8 @@ public interface SysSessionMapper {
      */
     SysSession findOne(Long id);
 
+    SysSession findOneForUpdate(Long id);
+
     /**
      * 添加
      * @param sysSession

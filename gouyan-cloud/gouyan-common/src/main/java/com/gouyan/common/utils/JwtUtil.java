@@ -14,6 +14,8 @@ import java.util.Date;
  */
 @Slf4j
 public class JwtUtil {
+    private static final String JWT_SECRET = System.getenv().getOrDefault(
+            "JWT_SECRET", "gouyan-course-demo-change-me");
     /**
      * JWT验证过期时间 EXPIRE_TIME 分钟 暂定一小时
      */
@@ -26,10 +28,10 @@ public class JwtUtil {
      * @param secret 用户的密码
      * @return 是否正确
      */
-    public static boolean verify(String token, String username, String secret) {
+    public static boolean verify(String token, String username) {
         try {
             //根据密码生成JWT效验器
-            Algorithm algorithm = Algorithm.HMAC256(secret);
+            Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
             JWTVerifier verifier = JWT.require(algorithm)
                     .withClaim("username", username)
                     .build();
@@ -64,9 +66,9 @@ public class JwtUtil {
      * @param secret   用户的密码
      * @return 加密的token
      */
-    public static String sign(String username, String secret) {
+    public static String sign(String username) {
         Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
-        Algorithm algorithm = Algorithm.HMAC256(secret);
+        Algorithm algorithm = Algorithm.HMAC256(JWT_SECRET);
         // 附带username信息
         return JWT.create()
                 .withClaim("username", username)

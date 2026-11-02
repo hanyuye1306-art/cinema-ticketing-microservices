@@ -1,5 +1,7 @@
 <template>
-  <div class="movie-container">
+  <div class="movie-container" v-loading="loading" element-loading-text="正在加载电影详情">
+    <content-skeleton v-if="!loaded" type="detail" />
+    <template v-else>
     <div class="header">
       <div class="header-inner clearfix">
         <div class="movie-info-left">
@@ -104,7 +106,7 @@
                   </div>
                   <div class="mod-content">
                     <div class="pictures-list">
-                      <div v-if="movieInfo.moviePictures.length == 0">
+                      <div v-if="loaded && movieInfo.moviePictures.length == 0">
                         暂无图片资源
                       </div>
                       <el-image
@@ -184,7 +186,7 @@
               <div class="tab-body">
                 <div class="pictures-list">
                   <div class="little-pictures">
-                    <div v-if="movieInfo.moviePictures.length == 0">
+                    <div v-if="loaded && movieInfo.moviePictures.length == 0">
                       暂无图片资源
                     </div>
                     <el-image
@@ -223,16 +225,19 @@
       <el-button type="primary" @click="submitComment">提交</el-button>
       </span>
     </el-dialog>
+    </template>
   </div>
 </template>
 
 <script>
 import movieItem from './../../components/movie/movie-item';
 import moment from 'moment'
+import ContentSkeleton from '../../components/common/content-skeleton'
 export default {
   name: "MovieInfo",
   components:{
-    movieItem
+    movieItem,
+    ContentSkeleton
   },
   data() {
     return {
@@ -259,7 +264,9 @@ export default {
         ]
       },
       colors: ['#99A9BF', '#F7BA2A', '#FF9900'],
-      httpURL: this.global.base
+      httpURL: this.global.base,
+      loading: true,
+      loaded: false
     }
   },
   created(){
@@ -267,22 +274,28 @@ export default {
   },
   methods:{
     async getMovieInfo(){
+      this.loading = true
       const _this = this
-      const {data : res} = await axios.get('sysMovie/find/' + this.movieId)
-      if(res.code !== 200) return this.$message.error('数据查询失败')
-      this.movieInfo = res.data
-      this.movieInfo.moviePoster = this.httpURL + JSON.parse(res.data.moviePoster)[0]
-      this.movieInfo.moviePictures = JSON.parse(this.movieInfo.moviePictures).map((obj, index) => {
-        return this.httpURL + obj
-      })
-      this.movieInfo.movieCategoryList = this.movieInfo.movieCategoryList.map((obj,index) => {
-        return obj.movieCategoryName;
-      }).join(" ")
-      this.movieInfo.movieCommentList = this.movieInfo.movieCommentList.slice(0, Math.min(10, this.movieInfo.movieCommentList.length))
-      this.movieInfo.movieCommentList = this.movieInfo.movieCommentList.map((obj, index) => {
-        obj.sysUser.userPicture = this.httpURL + JSON.parse(obj.sysUser.userPicture)[0]
-        return obj
-      })
+      try {
+        const {data : res} = await axios.get('sysMovie/find/' + this.movieId)
+        if(res.code !== 200) return this.$message.error('数据查询失败')
+        this.movieInfo = res.data
+        this.movieInfo.moviePoster = this.httpURL + JSON.parse(res.data.moviePoster)[0]
+        this.movieInfo.moviePictures = JSON.parse(this.movieInfo.moviePictures).map((obj, index) => {
+          return this.httpURL + obj
+        })
+        this.movieInfo.movieCategoryList = this.movieInfo.movieCategoryList.map((obj,index) => {
+          return obj.movieCategoryName;
+        }).join(" ")
+        this.movieInfo.movieCommentList = this.movieInfo.movieCommentList.slice(0, Math.min(10, this.movieInfo.movieCommentList.length))
+        this.movieInfo.movieCommentList = this.movieInfo.movieCommentList.map((obj, index) => {
+          obj.sysUser.userPicture = this.httpURL + JSON.parse(obj.sysUser.userPicture)[0]
+          return obj
+        })
+        this.loaded = true
+      } finally {
+        this.loading = false
+      }
     },
     showActors(){
       this.activeName = 'actors'

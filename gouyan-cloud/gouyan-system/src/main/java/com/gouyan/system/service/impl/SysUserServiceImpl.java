@@ -1,7 +1,6 @@
 package com.gouyan.system.service.impl;
 
 import com.gouyan.common.utils.JwtUtil;
-import com.gouyan.common.utils.SaltUtils;
 import com.gouyan.system.domin.LoginUser;
 import com.gouyan.system.domin.SysUser;
 import com.gouyan.system.domin.vo.SysUserVo;
@@ -9,6 +8,7 @@ import com.gouyan.system.mapper.SysUserMapper;
 import com.gouyan.system.service.SysUserService;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +16,8 @@ import java.util.List;
 
 @Service("sysUserService")
 public class SysUserServiceImpl implements SysUserService {
+
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     @Autowired
     private SysUserMapper sysUserMapper;
@@ -45,12 +47,8 @@ public class SysUserServiceImpl implements SysUserService {
         if(!isUserNameUnique(sysUser.getUserName(), -1L)){
             throw new AuthenticationException("用户名重复");
         }
-        //处理密码：md5 + salt + hash散列
-        String salt = SaltUtils.getSalt(8);
-        Md5Hash md5Hash = new Md5Hash(sysUser.getPassword(), salt, 1024);
-
-        sysUser.setPassword(md5Hash.toHex());
-        sysUser.setSalt(salt);
+        sysUser.setPassword(PASSWORD_ENCODER.encode(sysUser.getPassword()));
+        sysUser.setSalt(null);
         return sysUserMapper.add(sysUser);
     }
 
@@ -67,11 +65,8 @@ public class SysUserServiceImpl implements SysUserService {
         if(!originUser.getPassword().equals(sysUser.getPassword())){
             //修改了密码
             //重新处理密码存储
-            String salt = SaltUtils.getSalt(8);
-            Md5Hash md5Hash = new Md5Hash(sysUser.getPassword(), salt, 1024);
-
-            sysUser.setPassword(md5Hash.toHex());
-            sysUser.setSalt(salt);
+            sysUser.setPassword(PASSWORD_ENCODER.encode(sysUser.getPassword()));
+            sysUser.setSalt(null);
         }
         return sysUserMapper.update(sysUser);
     }
@@ -94,8 +89,15 @@ public class SysUserServiceImpl implements SysUserService {
         }
 
         //验证密码
-        Md5Hash md5Hash = new Md5Hash(sysUserVo.getPassword(), user.getSalt(), 1024);
-        if(!user.getPassword().equals(md5Hash.toHex())){
+        boolean passwordMatches;
+        if (user.getPassword().startsWith("$2")) {
+            passwordMatches = PASSWORD_ENCODER.matches(sysUserVo.getPassword(), user.getPassword());
+        } else {
+            // 兼容历史种子账号；新注册和改密账号均使用 BCrypt。
+            Md5Hash md5Hash = new Md5Hash(sysUserVo.getPassword(), user.getSalt(), 1024);
+            passwordMatches = user.getPassword().equals(md5Hash.toHex());
+        }
+        if(!passwordMatches){
             throw new AuthenticationException("用户名或密码错误");
         }
 
@@ -103,7 +105,7 @@ public class SysUserServiceImpl implements SysUserService {
         LoginUser loginUser = findLoginUser(sysUserVo);
 
         //颁发token
-        String token = JwtUtil.sign(user.getUserName(), user.getPassword());
+        String token = JwtUtil.sign(user.getUserName());
         loginUser.setToken(token);
         return loginUser;
     }
