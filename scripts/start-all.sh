@@ -121,6 +121,11 @@ if [ "$BACKEND_ONLY" = false ]; then
   require_command npm
   start_frontend user-web 8080 "$PROJECT_ROOT/gouyan-web/gouyan-user"
   start_frontend admin-web 8888 "$PROJECT_ROOT/gouyan-web/gouyan-ui"
+  echo "启动完成。"
+  echo "用户前台: http://127.0.0.1:8080"
+  echo "管理后台: http://127.0.0.1:8888"
+else
+  echo "后端服务启动完成。"
 fi
 
-echo "启动完成。前台 http://127.0.0.1:8080，后台 http://127.0.0.1:8888，Gateway http://127.0.0.1:8181"
+echo "API 网关: http://127.0.0.1:8181（仅供接口调用，根路径无页面）"
