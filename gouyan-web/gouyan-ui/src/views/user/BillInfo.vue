@@ -156,11 +156,12 @@ export default {
       })
       await axios.delete('sysBill/' + ids).then(resp => {
         if (resp.data.code !== 200){
-          this.$message.success('批量删除失败！')
+          this.$message.error(resp.data.msg || '批量删除失败！')
+          return
         }
+        this.$message.success('批量删除成功！')
       })
       this.getBillList()
-      this.$message.success('批量删除成功！')
     },
     //根据id删除对应的影厅分类
     async deleteBillById(id){
@@ -181,11 +182,12 @@ export default {
 
       await axios.delete('sysBill/' + id).then(resp => {
         if (resp.data.code !== 200){
-          _this.$message.success('删除订单失败！')
+          _this.$message.error(resp.data.msg || '删除订单失败！')
+          return
         }
+        _this.$message.success('删除订单成功！')
       })
       this.getBillList()
-      this.$message.success('删除订单成功！')
     },
     async billStateChanged(billInfo){
       const _this = this

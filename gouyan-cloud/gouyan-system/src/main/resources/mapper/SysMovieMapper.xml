@@ -182,7 +182,7 @@
     <select id="findByCinemaId" parameterType="Long" resultMap="CinemaMovieMap">
         select distinct sm.* from sys_movie sm
         join sys_session ss on sm.movie_id = ss.movie_id
-        where ss.cinema_id = #{id} and ss.session_date &gt;= CURDATE() and ss.session_date &lt; ADDDATE(curdate(),5)
+        where ss.cinema_id = #{id} and ss.session_date &gt;= CURDATE() and ss.session_date &lt; ADDDATE(curdate(),20)
     </select>
 
     <!-- 查询各种榜单信息 -->

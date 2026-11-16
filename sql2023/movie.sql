@@ -245,8 +245,6 @@ CREATE TABLE `sys_bill`  (
 -- ----------------------------
 INSERT INTO `sys_bill` VALUES (1, 1, 1, 17, '[\"1排4号\", \"1排1号\"]', '2020-11-30 16:44:02');
 INSERT INTO `sys_bill` VALUES (2, 1, 1, 16, '[\"3排4号\", \"2排5号\"]', '2020-12-24 16:15:04');
-INSERT INTO `sys_bill` VALUES (3, 1, 2, 6, '[\"3排4号\", \"2排5号\"]', '2020-12-01 16:42:33');
-INSERT INTO `sys_bill` VALUES (4, 1, 3, 4, '[\"2排5号\", \"2排6号\", \"2排7号\", \"2排8号\"]', '2020-12-03 21:47:31');
 INSERT INTO `sys_bill` VALUES (6, 1, 1, 19, '[\"3排4号\", \"2排5号\"]', '2020-11-30 16:42:33');
 INSERT INTO `sys_bill` VALUES (7, 0, 1, 16, '[\"5排9座\"]', '2023-10-26 00:13:14');
 INSERT INTO `sys_bill` VALUES (9, 1, 1, 16, '[\"6排10座\"]', '2023-10-26 00:13:49');
@@ -1042,22 +1040,28 @@ SELECT 37, `cinema_id`, `hall_id`, '国语2D', 28, 4, DATE_ADD(CURDATE(), INTERV
 -- 场次安排在当前课程验收周期，确保前台有可购买的未来场次。
 UPDATE `sys_session`
 SET `session_date` = CASE `session_id`
-  WHEN 16 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-  WHEN 17 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-  WHEN 18 THEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-  WHEN 19 THEN DATE_ADD(CURDATE(), INTERVAL 2 DAY)
-  WHEN 20 THEN DATE_ADD(CURDATE(), INTERVAL 2 DAY)
-  WHEN 21 THEN DATE_ADD(CURDATE(), INTERVAL 3 DAY)
-  WHEN 22 THEN DATE_ADD(CURDATE(), INTERVAL 3 DAY)
-  WHEN 23 THEN DATE_ADD(CURDATE(), INTERVAL 4 DAY)
-  WHEN 24 THEN DATE_ADD(CURDATE(), INTERVAL 4 DAY)
-  WHEN 25 THEN DATE_ADD(CURDATE(), INTERVAL 5 DAY)
-  WHEN 26 THEN DATE_ADD(CURDATE(), INTERVAL 5 DAY)
-  WHEN 27 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
-  WHEN 28 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
-  WHEN 29 THEN DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+  WHEN 16 THEN DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+  WHEN 17 THEN DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+  WHEN 18 THEN DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+  WHEN 19 THEN DATE_ADD(CURDATE(), INTERVAL 15 DAY)
+  WHEN 20 THEN DATE_ADD(CURDATE(), INTERVAL 15 DAY)
+  WHEN 21 THEN DATE_ADD(CURDATE(), INTERVAL 16 DAY)
+  WHEN 22 THEN DATE_ADD(CURDATE(), INTERVAL 16 DAY)
+  WHEN 23 THEN DATE_ADD(CURDATE(), INTERVAL 17 DAY)
+  WHEN 24 THEN DATE_ADD(CURDATE(), INTERVAL 17 DAY)
+  WHEN 25 THEN DATE_ADD(CURDATE(), INTERVAL 18 DAY)
+  WHEN 26 THEN DATE_ADD(CURDATE(), INTERVAL 18 DAY)
+  WHEN 27 THEN DATE_ADD(CURDATE(), INTERVAL 19 DAY)
+  WHEN 28 THEN DATE_ADD(CURDATE(), INTERVAL 19 DAY)
+  WHEN 29 THEN DATE_ADD(CURDATE(), INTERVAL 19 DAY)
   ELSE `session_date`
 END;
+
+-- 清理没有对应场次的孤立订单，避免后台显示空白订单信息。
+DELETE FROM `sys_bill`
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_session` s WHERE s.`session_id` = `sys_bill`.`session_id`
+);
 
 -- ----------------------------
 -- Table structure for sys_user
@@ -1080,7 +1084,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 'admin', '2f6b5c3044b271f5c07545aa862cf35c', '0v#C4w&i', '17777744455@qq.com', '13111212312', 1, '[\"/images/user/2020/12/15/daec8941dad549bc95cf1b26fd796ff1.jpg\"]', 1, '{\"job\": [1, 11], \"hobbies\": [1, 6, 7, 8, 9, 10], \"birthday\": \"2020-10-11\", \"autograph\": \"爱拼才会赢\", \"condition\": \"2\"}');
+INSERT INTO `sys_user` VALUES (1, 'admin', '2f6b5c3044b271f5c07545aa862cf35c', '0v#C4w&i', '640661510@qq.com', '18834271306', 1, '[\"/images/user/2020/12/15/daec8941dad549bc95cf1b26fd796ff1.jpg\"]', 1, '{\"job\": [1, 11], \"hobbies\": [1, 6, 7, 8, 9, 10], \"birthday\": \"2020-10-11\", \"autograph\": \"爱拼才会赢\", \"condition\": \"2\"}');
 INSERT INTO `sys_user` VALUES (2, '李四', '51a97989bc84e6d30c323d5b7f2d6994', 'wUA)g4Nk', '123456@qq.com', '13512345678', 1, '[\"/images/user/2020/12/15/82760d557d8c4620b453a7d7c2cd6340.jpg\"]', 2, '{\"job\": [1, 11], \"hobbies\": [1, 6, 7, 8, 9, 10], \"birthday\": \"2020-10-11\", \"autograph\": \"爱拼才会赢\", \"condition\": \"2\"}');
 INSERT INTO `sys_user` VALUES (3, '张三', '562779e437586caeb6b0ccda5dd1b881', 'JkVgQzC@', '456@qq.com', '13512345678', 0, '[\"/images/user/2020/12/15/5765ed23e48a4626b4c8dc2c5d8ff91a.jpg\"]', 2, '{\"job\": [1, 11], \"hobbies\": [1, 6, 7, 8, 9, 10], \"birthday\": \"2020-10-11\", \"autograph\": \"爱拼才会赢\", \"condition\": \"2\"}');
 INSERT INTO `sys_user` VALUES (4, '赵六', 'c0e89e9d1566fa2995f6780c54c4dd72', 'rvYUBSMb', '1456@qq.com', '13512345678', 0, '[\"/images/user/2020/12/15/ba755080ab35404abd8284b6842ca77c.jpg\"]', 2, '{\"job\": [1, 11], \"hobbies\": [1, 6, 7, 8, 9, 10], \"birthday\": \"2020-10-11\", \"autograph\": \"爱拼才会赢\", \"condition\": \"2\"}');
