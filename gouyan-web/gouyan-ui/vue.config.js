@@ -1,4 +1,9 @@
 module.exports = {
+    css: {
+        loaderOptions: {
+            sass: { implementation: require('sass') }
+        }
+    },
     devServer: {
         port: 8888
     },

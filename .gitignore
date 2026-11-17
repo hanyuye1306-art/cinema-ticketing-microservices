@@ -11,3 +11,7 @@ target/
 .env.*
 !.env.example
 .runtime/
+
+# Local dependency repair backups
+gouyan-web/*/package-lock.json.backup
+gouyan-web/*/package-lock.json.before-fix

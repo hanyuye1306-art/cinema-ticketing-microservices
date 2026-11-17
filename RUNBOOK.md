@@ -139,8 +139,16 @@ tail -f .runtime/bill.log
 启动脚本显示完成后，建议等待约 30 秒，让 Gateway 服务发现缓存完成首次刷新，再执行冒烟测试：
 
 ```bash
-GOUYAN_USERNAME=admin GOUYAN_PASSWORD='课程演示账号密码' ./scripts/smoke-test.sh
+bash scripts/smoke-test.sh
 ```
+
+请在项目根目录执行；Windows CMD 和 Git Bash 均可使用上述命令。脚本默认使用网站演示账号 `admin / 123456`，与 MySQL 的连接账号密码无关。若网站密码已修改，可以用 `GOUYAN_USERNAME`、`GOUYAN_PASSWORD` 覆盖；Windows CMD 示例：
+
+```cmd
+bash -c "GOUYAN_USERNAME=admin GOUYAN_PASSWORD=你的实际网站密码 bash scripts/smoke-test.sh"
+```
+
+脚本会验证 Python 是否可用，并以 UTF-8 模式解析接口 JSON，避免 Windows 默认 GBK 编码导致中文订单数据解析失败。
 
 脚本验证登录、Gateway、电影和影院查询、MyBatis 查询、Bill 到 Movie 的 Feign 调用，以及 Ribbon 是否轮询到两个 Movie 实例。
 
