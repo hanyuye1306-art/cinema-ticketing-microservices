@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "path": "gouyan-cloud"
+    }
+  ],
+  "settings": {
+    "java.import.maven.rootFolders": [
+      "${workspaceFolder}"
+    ]
+  }
+}
