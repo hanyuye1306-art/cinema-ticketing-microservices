@@ -42,7 +42,7 @@
           <el-button icon="el-icon-search" @click="getHallList">搜索</el-button>
         </el-col>
         <el-col :span="2">
-          <el-button type="primary" @click="addDialogVisible = true">添加影厅</el-button>
+          <el-button type="primary" @click="showAddDialog">添加影厅</el-button>
         </el-col>
         <el-col :span="2">
           <el-button type="danger" @click="multipleDelete">批量删除</el-button>
@@ -99,7 +99,7 @@
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
         <!--prop：在addFormRules中定义校验规则， v-model：双向绑定数据-->
         <el-form-item label="影院名称" prop="cinemaId">
-          <el-input v-model="curCinemaName" disabled></el-input>
+          <el-select v-if="isSystemAdmin" v-model="addForm.cinemaId" placeholder="请选择影院"><el-option v-for="cinema in cinemaList" :key="cinema.cinemaId" :label="cinema.cinemaName" :value="cinema.cinemaId" /></el-select><el-input v-else v-model="curCinemaName" disabled></el-input>
         </el-form-item>
         <el-form-item label="影厅编号" prop="hallId">
           <el-input v-model="addForm.hallId"></el-input>
@@ -184,9 +184,17 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
+  computed: {
+    isSystemAdmin() {
+      return window.sessionStorage.getItem("btnPermission") === "admin";
+    }
+
+  },
   name: "HallInfo",
+
   data() {
     return {
       queryInfo: {
@@ -216,44 +224,58 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        hallId: [
-          { required: true, message: '请输入影厅编号', trigger: 'blur' }
-        ],
-        hallName: [
-          { required: true, message: '请输入影厅名称', trigger: 'blur' }
-        ],
-        hallCategoryId: [
-          { required: true, message: '请输入影厅分类编号', trigger: 'blur' }
-        ]
+        cinemaId: [{
+          required: true,
+          message: "请选择影院",
+          trigger: "change"
+        }],
+        hallId: [{
+          required: true,
+          message: '请输入影厅编号',
+          trigger: 'blur'
+        }],
+        hallName: [{
+          required: true,
+          message: '请输入影厅名称',
+          trigger: 'blur'
+        }],
+        hallCategoryId: [{
+          required: true,
+          message: '请输入影厅分类编号',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        hallId: [
-          { required: true, message: '请输入影厅编号', trigger: 'blur' }
-        ],
-        hallName: [
-          { required: true, message: '请输入影厅名称', trigger: 'blur' }
-        ],
-        hallCategoryId: [
-          { required: true, message: '请输入影厅分类编号', trigger: 'blur' }
-        ]
+        hallId: [{
+          required: true,
+          message: '请输入影厅编号',
+          trigger: 'blur'
+        }],
+        hallName: [{
+          required: true,
+          message: '请输入影厅名称',
+          trigger: 'blur'
+        }],
+        hallCategoryId: [{
+          required: true,
+          message: '请输入影厅分类编号',
+          trigger: 'blur'
+        }]
       },
       selectedCinemaId: '',
       selectedHallCategoryId: '',
       selectedHallState: '',
       cinemaList: [],
       hallCategoryList: [],
-      states: [
-        {
-          id: 0,
-          name: '未启用'
-        },
-        {
-          id: 1,
-          name: '已启用'
-        }
-      ],
+      states: [{
+        id: 0,
+        name: '未启用'
+      }, {
+        id: 1,
+        name: '已启用'
+      }],
       multipleSelection: [],
       arrangeDialogVisible: false,
       seats: {},
@@ -265,260 +287,303 @@ export default {
       arrangeDialogWidth: '',
       loginUser: JSON.parse(window.sessionStorage.getItem('loginUser')),
       curCinemaName: ''
-    }
+    };
   },
+
   created() {
-    this.getHallList()
-    this.getCinemaList()
-    this.getHallCategoryList()
-    this.curCinemaName = this.loginUser.cinemaName
+    this.getHallList();
+    this.getCinemaList();
+    this.getHallCategoryList();
+    this.curCinemaName = this.loginUser.cinemaName;
   },
+
   methods: {
-    getHallList() {
-      this.queryInfo.cinemaId = this.selectedCinemaId
-      //非系统管理员只能管理自己影院的影厅
-      if(window.sessionStorage.getItem("btnPermission") === 'normal'){
-        this.queryInfo.cinemaId = JSON.parse(window.sessionStorage.getItem('loginUser')).cinemaId
-      }
-      this.queryInfo.hallCategoryId = this.selectedHallCategoryId
-      this.queryInfo.hallState = this.selectedHallState
-      const _this = this;
-      axios.get('sysHall', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.hallList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getHallList() {
+      return runRead(this, async () => {
+        this.queryInfo.cinemaId = this.selectedCinemaId; //非系统管理员只能管理自己影院的影厅
+
+        if (window.sessionStorage.getItem("btnPermission") === 'normal') {
+          this.queryInfo.cinemaId = JSON.parse(window.sessionStorage.getItem('loginUser')).cinemaId;
+        }
+
+        this.queryInfo.hallCategoryId = this.selectedHallCategoryId;
+        this.queryInfo.hallState = this.selectedHallState;
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysHall', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.hallList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getHallList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getHallList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getHallList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getHallList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addHall(){
-      let row = this.addForm.rowNums
-      let col = this.addForm.seatNumsRow
-      this.$set(this.addForm, 'seatNums', row * col)
-      let seat = {}
-      for (let i = 0; i < row; i++) {
-        let arr = []
-        for (let j = 0; j < col; j++) {
-          arr.push(0)
-        }
-        seat[isNaN(parseInt(this.addForm.rowStart)) ? String.fromCharCode(i + this.addForm.rowStart.charCodeAt(0)) : i + parseInt(this.addForm.rowStart)] = arr
-      }
-      this.$set(this.addForm, 'seatState', JSON.stringify(seat))
+    async addHall() {
+      return runMutation(this, "addHall", async () => {
+        if (window.sessionStorage.getItem("btnPermission") !== "admin") this.addForm.cinemaId = this.loginUser.cinemaId;
+        if (!(await validateForm(this.$refs.addFormRef))) return;
+        const row = Number(this.addForm.rowNums),
+              col = Number(this.addForm.seatNumsRow);
+        if (!Number.isInteger(row) || !Number.isInteger(col) || row < 3 || row > 50 || col < 3 || col > 50) throw Error("排数和每排座位数须为3到50的整数");
+        const seats = {};
 
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        //预校验成功，发网络请求
-        //设置影院id为登录用户所属影院
-        _this.addForm.cinemaId = _this.loginUser.cinemaId
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const {data : res } = await axios.post('sysHall', JSON.stringify(_this.addForm))
-        if(res.code !== 200) return this.$message.error("添加影厅信息失败 " + res.msg)
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getHallList()
-        this.$message.success('添加影厅信息成功！')
-      })
+        for (let i = 0; i < row; i++) seats[isNaN(parseInt(this.addForm.rowStart)) ? String.fromCharCode(i + this.addForm.rowStart.charCodeAt(0)) : i + parseInt(this.addForm.rowStart)] = Array(col).fill(0);
+
+        const payload = { ...this.addForm,
+          seatNums: row * col,
+          seatState: JSON.stringify(seats)
+        };
+        await checkedRequest(axios.post("sysHall", payload, {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }));
+        this.addDialogVisible = false;
+        this.getHallList();
+        this.$message.success("添加影厅成功");
+      });
     },
+
     // 显示修改对话框，回显数据
-    showEditDialog(id1, id2){
-      const _this = this
-      axios.get('sysHall/' + id1 + '/' + id2 ).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      this.editDialogVisible = true
+    async showEditDialog(id1, id2) {
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysHall/' + id1 + '/' + id2)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改影厅分类信息并提交
-    editHallInfo(){
-      let row = this.editForm.rowNums
-      let col = this.editForm.seatNumsRow
-      this.$set(this.editForm, 'seatNums', row * col)
-      let seat = {}
-      for (let i = 0; i < row; i++) {
-        let arr = []
-        for (let j = 0; j < col; j++) {
-          arr.push(0)
-        }
-        seat[isNaN(parseInt(this.editForm.rowStart)) ? String.fromCharCode(i + this.editForm.rowStart.charCodeAt(0)) : i + parseInt(this.editForm.rowStart)] = arr
-      }
-      this.$set(this.editForm, 'seatState', JSON.stringify(seat))
+    async editHallInfo() {
+      return runMutation(this, "editHallInfo", async () => {
+        if (!(await validateForm(this.$refs.editFormRef))) return;
+        const row = Number(this.editForm.rowNums),
+              col = Number(this.editForm.seatNumsRow);
+        if (!Number.isInteger(row) || !Number.isInteger(col) || row < 3 || row > 50 || col < 3 || col > 50) throw Error("排数和每排座位数须为3到50的整数");
+        const {
+          data
+        } = await checkedRequest(axios.get("sysHall/" + this.editForm.cinemaId + "/" + this.editForm.hallId));
+        const original = data.data;
+        let seatState = original.seatState;
 
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('sysHall', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改影厅信息失败！')
-            success = false
+        if (row !== original.rowNums || col !== original.seatNumsRow || this.editForm.rowStart !== original.rowStart) {
+          const seats = {};
+
+          for (let i = 0; i < row; i++) seats[isNaN(parseInt(this.editForm.rowStart)) ? String.fromCharCode(i + this.editForm.rowStart.charCodeAt(0)) : i + parseInt(this.editForm.rowStart)] = Array(col).fill(0);
+
+          seatState = JSON.stringify(seats);
+        }
+
+        await checkedRequest(axios.put("sysHall", { ...this.editForm,
+          seatNums: row * col,
+          seatState
+        }, {
+          headers: {
+            "Content-Type": "application/json"
           }
-        })
-        if (!success) return
-        this.editDialogVisible = false
-        this.getHallList()
-        this.$message.success('修改影厅信息成功！')
-      })
+        }));
+        this.editDialogVisible = false;
+        this.getHallList();
+        this.$message.success("修改影厅成功");
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
+        }
 
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        let item = {
-          cinemaId: data.cinemaId,
-          hallId: data.hallId
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-        ids.push(item)
-      })
-      console.log(ids)
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      await axios.post('sysHall/delete', JSON.stringify(ids)).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除影厅分类失败！')
-        }
-      })
-      this.getHallList()
-      this.$message.success('批量删除影厅分类成功！')
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          let item = {
+            cinemaId: data.cinemaId,
+            hallId: data.hallId
+          };
+          ids.push(item);
+        });
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysHall/delete', JSON.stringify(ids))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除影厅分类失败！');
+          }
+        });
+        this.getHallList();
+        this.$message.success('批量删除影厅分类成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteHallById(id1, id2){
-      let deleteInfo = [{
-        cinemaId: id1,
-        hallId: id2
-      }]
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteHallById(id1, id2) {
+      return runMutation(this, "deleteHallById", async () => {
+        let deleteInfo = [{
+          cinemaId: id1,
+          hallId: id2
+        }];
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
+        const _this = this; //询问用户是否确认删除
 
-      console.log(deleteInfo)
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      await axios.post('sysHall/delete', JSON.stringify(deleteInfo)).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除影厅信息失败！')
+
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getHallList()
-      this.$message.success('删除影厅信息成功！')
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysHall/delete', JSON.stringify(deleteInfo))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除影厅信息失败！');
+          }
+        });
+        this.getHallList();
+        this.$message.success('删除影厅信息成功！');
+      });
     },
-    getCinemaList(){
-      const _this = this;
-      axios.get('sysCinema').then(resp => {
-        console.log(resp)
-        _this.cinemaList = resp.data.data;
-      })
+
+    async getCinemaList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinema')).then(resp => {
+          console.log(resp);
+          _this.cinemaList = resp.data.data;
+        });
+      });
     },
-    getHallCategoryList(){
-      const _this = this;
-      axios.get('sysHallCategory').then(resp => {
-        console.log(resp)
-        _this.hallCategoryList = resp.data.data;
-      })
+
+    async getHallCategoryList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysHallCategory')).then(resp => {
+          console.log(resp);
+          _this.hallCategoryList = resp.data.data;
+        });
+      });
     },
-    async hallStateChanged(hallInfo){
-      const _this = this
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      await axios.put('/sysHall', JSON.stringify(hallInfo)).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.error('更新影厅状态失败！')
-        }
-      })
-      this.getHallList()
-      this.$message.success('更新影厅状态成功！')
+
+    async hallStateChanged(hallInfo) {
+      return runMutation(this, "hallStateChanged", async () => {
+        const _this = this;
+
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('/sysHall', JSON.stringify(hallInfo))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.error('更新影厅状态失败！');
+          }
+        });
+        this.getHallList();
+        this.$message.success('更新影厅状态成功！');
+      }, () => this.getHallList());
     },
-    async arrangeSeat(id1, id2){
-      const _this = this
-      await axios.get('sysHall/' + id1 + '/' + id2).then(resp => {
-        _this.editSeat = resp.data.data
-        _this.seats = JSON.parse(resp.data.data.seatState)
-        console.log(resp)
-      })
-      console.log(this.seats)
-      this.arrangeDialogWidth = 200 + this.editSeat.seatNumsRow * 40 + 'px'
-      this.arrangeDialogVisible = true
+
+    async arrangeSeat(id1, id2) {
+      return runMutation(this, "arrangeSeat", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysHall/' + id1 + '/' + id2)).then(resp => {
+          _this.editSeat = resp.data.data;
+          _this.seats = JSON.parse(resp.data.data.seatState);
+        });
+        this.arrangeDialogWidth = 200 + this.editSeat.seatNumsRow * 40 + 'px';
+        this.arrangeDialogVisible = true;
+      });
     },
-    pressSeat(key, idx){
-      console.log( typeof this.seats[key][idx])
-      this.$set(this.seats[key], idx, (this.seats[key][idx] == 0 ? 1 : 0))
+
+    pressSeat(key, idx) {
+      this.$set(this.seats[key], idx, this.seats[key][idx] == 0 ? 1 : 0);
     },
-    async saveSeat(){
-      this.editSeat.seatState = JSON.stringify(this.seats)
-      console.log(this.editSeat)
-      let totalSeats = 0
-      for(let key in this.seats){
-        for(let j = 0; j < this.seats[key].length; j++){
-          if(this.seats[key][j] == 0){
-            totalSeats++
+
+    async saveSeat() {
+      return runMutation(this, "saveSeat", async () => {
+        this.editSeat.seatState = JSON.stringify(this.seats);
+        let totalSeats = 0;
+
+        for (let key in this.seats) {
+          for (let j = 0; j < this.seats[key].length; j++) {
+            if (this.seats[key][j] == 0) {
+              totalSeats++;
+            }
           }
         }
-      }
 
-      this.$set(this.editSeat, 'seatNums', totalSeats)
-      const _this = this
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      await axios.put('sysHall', JSON.stringify(_this.editSeat)).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.error('安排座位失败！')
-        }
-      })
-      this.arrangeDialogVisible = false
-      this.getHallList()
-      this.$message.success('安排座位成功！')
+        this.$set(this.editSeat, 'seatNums', totalSeats);
+
+        const _this = this;
+
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysHall', JSON.stringify(_this.editSeat))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('安排座位失败！');
+          }
+        });
+        this.arrangeDialogVisible = false;
+        this.getHallList();
+        this.$message.success('安排座位成功！');
+      });
     },
-    isCinemaOwner(cinemaId){
-      return this.loginUser.cinemaId === cinemaId
+
+    isCinemaOwner(cinemaId) {
+      return window.sessionStorage.getItem("btnPermission") === "admin" || this.loginUser.cinemaId === cinemaId;
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

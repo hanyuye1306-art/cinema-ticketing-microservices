@@ -62,10 +62,11 @@ axios.interceptors.response.use(response => {
     }
     //获取状态码
     const status = error.response.status;
-    const errortext = codeMessage[status] || error.response.statusText;
+    const errortext = error.response.data && error.response.data.msg || codeMessage[status] || error.response.statusText;
 
     //提示错误信息
     Message.error(errortext)
+    error.reported = true
 
     // 错误状态处理
     if (status === 401) {

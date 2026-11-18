@@ -87,8 +87,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "UserHobby",
+
   // this.$message和this.$confirm都属于原型挂载, 在element.js中配置
   // Vue.prototype.$message = Message
   // Vue.prototype.$confirm = MessageBox.confirm
@@ -109,156 +111,190 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        userHobbyName: [
-          { required: true, message: '请输入用户爱好', trigger: 'blur' }
-        ]
+        userHobbyName: [{
+          required: true,
+          message: '请输入用户爱好',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        userHobbyName: [
-          { required: true, message: '请输入用户爱好', trigger: 'blur' }
-        ]
+        userHobbyName: [{
+          required: true,
+          message: '请输入用户爱好',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: []
-    }
+    };
   },
+
   created() {
-    this.getUserHobbyList()
+    this.getUserHobbyList();
   },
+
   methods: {
-    getUserHobbyList() {
-      const _this = this;
-      axios.get('sysUserHobby', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.userhobbylist = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getUserHobbyList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysUserHobby', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.userhobbylist = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getUserHobbyList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getUserHobbyList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getUserHobbyList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getUserHobbyList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addUserHobby(){
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        //预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysUserHobby', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加用户爱好失败！')
+    async addUserHobby() {
+      return runMutation(this, "addUserHobby", async () => {
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysUserHobby', JSON.stringify(_this.addForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('添加用户爱好失败！');
           }
-        })
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getUserHobbyList()
-        this.$message.success('添加用户爱好成功！')
-      })
+        }); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getUserHobbyList();
+        this.$message.success('添加用户爱好成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    showEditDialog(id){
-      const _this = this
-      axios.get('sysUserHobby/' + id ).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysUserHobby/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改影厅分类信息并提交
-    editUserHobbyInfo(){
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('/sysUserHobby', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改用户爱好失败！')
+    async editUserHobbyInfo() {
+      return runMutation(this, "editUserHobbyInfo", async () => {
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('/sysUserHobby', JSON.stringify(_this.editForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('修改用户爱好失败！');
           }
-        })
-        this.editDialogVisible = false
-        this.getUserHobbyList()
-        this.$message.success('修改用户爱好成功！')
-      })
+        });
+        this.editDialogVisible = false;
+        this.getUserHobbyList();
+        this.$message.success('修改用户爱好成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.userHobbyId)
-      })
-      await axios.delete('sysUserHobby/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除用户爱好失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getUserHobbyList()
-      this.$message.success('批量删除用户爱好成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.userHobbyId);
+        });
+        await checkedRequest(axios.delete('sysUserHobby/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除用户爱好失败！');
+          }
+        });
+        this.getUserHobbyList();
+        this.$message.success('批量删除用户爱好成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteUserHobbyById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteUserHobbyById(id) {
+      return runMutation(this, "deleteUserHobbyById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysUserHobby/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除用户爱好失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getUserHobbyList()
-      this.$message.success('删除用户爱好成功！')
+
+        await checkedRequest(axios.delete('sysUserHobby/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除用户爱好失败！');
+          }
+        });
+        this.getUserHobbyList();
+        this.$message.success('删除用户爱好成功！');
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

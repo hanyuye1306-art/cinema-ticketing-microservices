@@ -33,12 +33,12 @@ public class SysSessionController extends BaseController {
     }
 
     @PostMapping("/sysSession")
-    public ResponseResult add(@RequestBody SysSession sysSession){
+    public ResponseResult add(@org.springframework.validation.annotation.Validated @RequestBody SysSession sysSession){
         return getResult(sysSessionService.add(sysSession));
     }
 
     @PutMapping("/sysSession")
-    public ResponseResult update(@RequestBody SysSession sysSession){
+    public ResponseResult update(@org.springframework.validation.annotation.Validated @RequestBody SysSession sysSession){
         return getResult(sysSessionService.update(sysSession));
     }
 

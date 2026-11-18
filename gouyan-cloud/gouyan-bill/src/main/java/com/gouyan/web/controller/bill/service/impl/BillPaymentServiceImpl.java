@@ -51,6 +51,12 @@ public class BillPaymentServiceImpl implements BillPaymentService {
         }
 
         if (!Boolean.TRUE.equals(requestedBill.getBillState())) {
+            if (Boolean.TRUE.equals(persistedBill.getBillState())) {
+                throw new DataNotFoundException("已支付订单不能直接改回未支付，请通过退款业务处理");
+            }
+            requestedBill.setUserId(persistedBill.getUserId());
+            requestedBill.setSessionId(persistedBill.getSessionId());
+            requestedBill.setSeats(persistedBill.getSeats());
             return sysBillMapper.update(requestedBill);
         }
 

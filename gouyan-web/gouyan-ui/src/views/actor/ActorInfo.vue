@@ -227,9 +227,11 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
   name: "ActorInfo",
+
   data() {
     return {
       queryInfo: {
@@ -259,28 +261,28 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        actorName: [
-          { required: true, message: '请输入演员姓名', trigger: 'blur' }
-        ],
-        actorGender: [
-          { required: true, message: '请输入演员性别', trigger: 'blur'}
-        ]
+        actorName: [{
+          required: true,
+          message: '请输入演员姓名',
+          trigger: 'blur'
+        }],
+        actorGender: [{
+          required: true,
+          message: '请输入演员性别',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       inputActorName: '',
       editForm: {},
       editFormRules: {},
-      gender: [
-
-        {
-          gender: false,
-          name: '女'
-        },
-        {
-          gender: true,
-          name: '男'
-        }
-      ],
+      gender: [{
+        gender: false,
+        name: '女'
+      }, {
+        gender: true,
+        name: '男'
+      }],
       selectedActorId: '',
       actorList: [],
       multipleSelection: [],
@@ -290,6 +292,7 @@ export default {
         disabledDate(time) {
           return time.getTime() > Date.now();
         }
+
       },
       dialogImageUrl: '',
       dialogVisible: false,
@@ -298,214 +301,233 @@ export default {
       pics: [],
       // 发送给后端的JSON图片数组
       pictureList: [],
-      picNums: 0,
-    }
+      picNums: 0
+    };
   },
+
   created() {
-    this.getActorList()
+    this.getActorList();
   },
+
   methods: {
-    getActorList() {
-      this.queryInfo.actorName = this.inputActorName
-      this.queryInfo.actorId = this.selectedActorId
-      const _this = this;
-      axios.get('sysActor', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.actorList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getActorList() {
+      return runRead(this, async () => {
+        this.queryInfo.actorName = this.inputActorName;
+        this.queryInfo.actorId = this.selectedActorId;
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActor', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.actorList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getActorList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getActorList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getActorList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getActorList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
-      this.pictureList = []
-      this.pics = []
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
+      this.pictureList = [];
+      this.pics = [];
     },
+
     // 监听添加按钮
     async addActor() {
-      await this.submitFile()
-      console.log(this.pictureList)
-      this.addForm.actorPhoto = JSON.stringify(this.pictureList)
+      return runMutation(this, "addActor", async () => {
+        await this.submitFile();
+        this.addForm.actorPhoto = JSON.stringify(this.pictureList);
 
-      const _this = this
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        // 预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysActor', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; // 预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysActor', JSON.stringify(_this.addForm))).then(resp => {
           if (resp.data.code !== 200) {
-            this.$message.error('添加演员信息失败！')
+            this.$message.error('添加演员信息失败！');
           }
-        })
+        }); //隐藏添加对话框
 
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getActorList()
-        this.$message.success('添加演员信息成功！')
-      })
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getActorList();
+        this.$message.success('添加演员信息成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
     async showEditDialog(id) {
-      const _this = this
-      await axios.get('sysActor/' + id).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      for (const item of JSON.parse(this.editForm.actorPhoto)) {
-        let pic = {}
-        pic['name'] = ''
-        pic['url'] = this.global.base + item
-        this.pics.push(pic)
-      }
-      console.log("aaa")
-      console.log(this.pics)
-      this.editDialogVisible = true
+      return runMutation(this, "showEditDialog", async () => {
+        this.pictureList = [];
+        this.deletePicList = [];
+        this.pics = [];
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActor/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+
+        for (const item of pictureArray(this.editForm.actorPhoto)) {
+          let pic = {};
+          pic['name'] = '';
+          pic['url'] = this.global.base + item;
+          this.pics.push(pic);
+        }
+
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
-      this.$refs.pictureEditRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
+      this.$refs.pictureEditRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
     },
+
     // 修改演员分类信息并提交
     async editActorInfo() {
-      await this.submitFile()
-      this.editForm.actorPhoto = JSON.stringify(this.pictureList)
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('/sysActor', JSON.stringify(_this.editForm)).then(resp => {
+      return runMutation(this, "editActorInfo", async () => {
+        await this.submitFile();
+        this.editForm.actorPhoto = JSON.stringify(this.pictureList);
+
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        let success = true;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('/sysActor', JSON.stringify(_this.editForm))).then(resp => {
           if (resp.data.code !== 200) {
-            this.$message.error('修改演员信息失败！')
-            success = false
+            this.$message.error('修改演员信息失败！');
+            success = false;
           }
-        })
-        if (!success) return
-        this.editDialogVisible = false
-        this.getActorList()
-        this.$message.success('修改演员信息成功！')
-      })
+        });
+        if (!success) return;
+        this.editDialogVisible = false;
+        this.getActorList();
+        this.$message.success('修改演员信息成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.actorId)
-      })
-      console.log(ids)
-      await axios.delete('sysActor/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除演员失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getActorList()
-      this.$message.success('批量删除演员成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.actorId);
+        });
+        await checkedRequest(axios.delete('sysActor/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除演员失败！');
+          }
+        });
+        this.getActorList();
+        this.$message.success('批量删除演员成功！');
+      });
     },
+
     //根据id删除对应的演员分类
-    async deleteActorById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteActorById(id) {
+      return runMutation(this, "deleteActorById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      console.log(id)
-      await axios.delete('sysActor/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('删除演员信息失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getActorList()
-      this.$message.success('删除演员信息成功！')
+
+        await checkedRequest(axios.delete('sysActor/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('删除演员信息失败！');
+          }
+        });
+        this.getActorList();
+        this.$message.success('删除演员信息成功！');
+      });
     },
+
     handleRemove(file) {
-      const filePath = file.url
-      console.log(filePath)
-      const idx = this.pics.findIndex(x => x.url === filePath)
-      this.pics.splice(idx, 1)
+      const filePath = file.url;
+      const idx = this.pics.findIndex(x => x.url === filePath);
+      this.pics.splice(idx, 1);
     },
+
     handlePictureCardPreview(file) {
-      console.log(this.pics)
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
-    handleChange(file, filelist){
-      this.pics = filelist.slice(0)
-      console.log(this.pics)
+
+    handleChange(file, filelist) {
+      this.pics = filelist.slice(0);
     },
-    handleSuccess(response){
-      this.pictureList.push(response.data)
-      this.addForm = JSON.stringify(this.pictureList)
-      this.editForm = JSON.stringify(this.pictureList)
+
+    handleSuccess(response) {
+      this.pictureList.push(response.data);
     },
-    handleError(err){
-      console.log(err)
+
+    handleError(err) {},
+
+    handleExceed() {
+      this.$message.error("用户头像最多上传一张！");
     },
-    handleExceed(){
-      this.$message.error("用户头像最多上传一张！")
-    },
-    async submitFile(){
-      const _this = this
-      for (let i = 0; i < this.pics.length; i++){
-        let formData = new FormData()
-        if (this.pics[i].status === 'success') {
-          let s = this.pics[i].url
-          this.pictureList.push(s.substring(s.indexOf('/images')))
-          continue
-        }
-        let file = this.pics[i].raw
-        formData.append('file', file)
-        await axios.post('upload/actor', formData).then(response =>{
-          _this.pictureList.push(response.data.data)
-        })
-      }
+
+    async submitFile() {
+      this.pictureList = await uploadPictures(this, this.pics, "actor");
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

@@ -121,8 +121,8 @@
         <el-form-item label="上映时间" prop="releaseDate">
           <el-date-picker
               v-model="addForm.releaseDate"
-              value-format="yyyy-MM-dd HH:mm:ss"
-              type="datetime"
+              value-format="yyyy-MM-dd"
+              type="date"
               placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
@@ -202,8 +202,8 @@
         <el-form-item label="上映时间" prop="releaseDate">
           <el-date-picker
               v-model="editForm.releaseDate"
-              value-format="yyyy-MM-dd HH:mm:ss"
-              type="datetime"
+              value-format="yyyy-MM-dd"
+              type="date"
               placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
@@ -335,8 +335,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "MovieInfo",
+
   data() {
     return {
       queryInfo: {
@@ -354,41 +356,41 @@ export default {
       url: process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8181',
       //控制对话框的显示与隐藏
       addDialogVisible: false,
-      selectedMovieCategory:[],
+      selectedMovieCategory: [],
       selectedMovieArea: '',
       selectedMovieAge: '',
-      selectedMovieActor:'',
-      selectedMovieRole:'',
+      selectedMovieActor: '',
+      selectedMovieRole: '',
       selectedDate: [],
       selectedMovieNameCn: '',
       selectedMovieNameEn: '',
-      categoryList:[],
+      categoryList: [],
       movieList: [],
       movieAreaList: [],
       movieAgeList: [],
       actorList: [],
       roleList: [],
       editForm: {},
-      editActorForm:null,
-      editCategoryForm:[],
-      actorMovieId:'',
+      editActorForm: null,
+      editCategoryForm: [],
+      actorMovieId: '',
       editDialogVisible: false,
       editActorVisible: false,
       multipleSelection: [],
       dialogVisible: false,
       dialogImageUrl: '',
-      disabled:false,
+      disabled: false,
       //电影封面增删变量
       poster: [],
       //发送给后端的JSON图片
       posterL: [],
-      deletePostList:[],
+      deletePostList: [],
       //添加删除图片集 动态绑定图片列表
       pics: [],
       // 发送给后端的JSON图片数组
       pictureList: [],
-      picNums:0,
-      deletePicList:[],
+      picNums: 0,
+      deletePicList: [],
       //添加电影表单数据
       addForm: {
         movieId: '',
@@ -403,40 +405,57 @@ export default {
         movieRateNum: 0,
         movieIntroduction: '',
         moviePictures: '',
-        moviePoster:'',
+        moviePoster: ''
       },
       //添加验证表单规则对象
       addFormRules: {
-        movieNameCn: [
-          {required: true, message: '请输入电影中文名', trigger: 'blur'}
-        ],
-        movieNameEn: [
-          {required: true, message: '请输入电影英文名', trigger: 'blur'}
-        ],
-        movieAreaId: [
-          {required: true, message: '请输入电影区域id', trigger: 'blur'}
-        ],
-        movieAgeId: [
-          {required: true, message: '请输入电影年代id', trigger: 'blur'}
-        ]
+        movieNameCn: [{
+          required: true,
+          message: '请输入电影中文名',
+          trigger: 'blur'
+        }],
+        movieNameEn: [{
+          required: true,
+          message: '请输入电影英文名',
+          trigger: 'blur'
+        }],
+        movieAreaId: [{
+          required: true,
+          message: '请输入电影区域id',
+          trigger: 'blur'
+        }],
+        movieAgeId: [{
+          required: true,
+          message: '请输入电影年代id',
+          trigger: 'blur'
+        }]
       },
       //修改验证表单规则对象
       editFormRules: {
-        movieNameCn: [
-          {required: true, message: '请输入电影中文名', trigger: 'blur'}
-        ],
-        movieNameEn: [
-          {required: true, message: '请输入电影英文名', trigger: 'blur'}
-        ],
-        movieAreaId: [
-          {required: true, message: '请输入电影区域id', trigger: 'blur'}
-        ],
-        movieAgeId: [
-          {required: true, message: '请输入电影年代id', trigger: 'blur'}
-        ]
+        movieNameCn: [{
+          required: true,
+          message: '请输入电影中文名',
+          trigger: 'blur'
+        }],
+        movieNameEn: [{
+          required: true,
+          message: '请输入电影英文名',
+          trigger: 'blur'
+        }],
+        movieAreaId: [{
+          required: true,
+          message: '请输入电影区域id',
+          trigger: 'blur'
+        }],
+        movieAgeId: [{
+          required: true,
+          message: '请输入电影年代id',
+          trigger: 'blur'
+        }]
       }
-    }
+    };
   },
+
   created() {
     this.getMovieList();
     this.getMovieAgeList();
@@ -445,164 +464,178 @@ export default {
     this.getroleList();
     this.getCategoryList();
   },
+
   methods: {
-    getMovieList() {
-      this.queryInfo.movieNameCn = this.selectedMovieNameCn
-      this.queryInfo.movieNameEn = this.selectedMovieNameEn
-      this.queryInfo.movieAgeId = this.selectedMovieAge
-      this.queryInfo.movieAreaId = this.selectedMovieArea
-      if (!this.selectedDate) {
-        this.queryInfo.startDate = this.selectedDate[0]
-        this.queryInfo.endDate = this.selectedDate[1]
-      }
-      const _this = this;
-      axios.get('sysMovie', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.movieList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getMovieList() {
+      return runRead(this, async () => {
+        this.queryInfo.movieNameCn = this.selectedMovieNameCn;
+        this.queryInfo.movieNameEn = this.selectedMovieNameEn;
+        this.queryInfo.movieAgeId = this.selectedMovieAge;
+        this.queryInfo.movieAreaId = this.selectedMovieArea;
+
+        if (!this.selectedDate) {
+          this.queryInfo.startDate = this.selectedDate[0];
+          this.queryInfo.endDate = this.selectedDate[1];
+        }
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovie', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.movieList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
-    getCategoryList() {
-      const _this = this
-      axios.get('sysMovieCategory').then(resp=>{
-        _this.categoryList = resp.data.data;
-        console.log(_this.categoryList)
-      })
+
+    async getCategoryList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieCategory')).then(resp => {
+          _this.categoryList = resp.data.data;
+          console.log(_this.categoryList);
+        });
+      });
     },
-    getMovieAreaList() {
-      const _this = this;
-      axios.get('sysMovieArea').then(resp => {
-        console.log(resp)
-        _this.movieAreaList = resp.data.data;
-      })
+
+    async getMovieAreaList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieArea')).then(resp => {
+          console.log(resp);
+          _this.movieAreaList = resp.data.data;
+        });
+      });
     },
-    getMovieAgeList() {
-      const _this = this;
-      axios.get('sysMovieAge').then(resp => {
-        console.log(resp)
-        _this.movieAgeList = resp.data.data;
-      })
+
+    async getMovieAgeList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieAge')).then(resp => {
+          console.log(resp);
+          _this.movieAgeList = resp.data.data;
+        });
+      });
     },
-    getactorList(){
-      const _this = this;
-      axios.get('sysActor').then(resp =>{
-        console.log(resp.data.data)
-        _this.actorList = resp.data.data;
-      })
+
+    async getactorList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActor')).then(resp => {
+          console.log(resp.data.data);
+          _this.actorList = resp.data.data;
+        });
+      });
     },
-    getroleList(){
-      const _this = this;
-      axios.get('sysActorRole').then(resp =>{
-        console.log(resp.data.data)
-        _this.roleList = resp.data.data;
-      })
+
+    async getroleList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActorRole')).then(resp => {
+          console.log(resp.data.data);
+          _this.roleList = resp.data.data;
+        });
+      });
     },
-    ifShow(id){
-      let i = 0
-      let l = true
-      for(i=0;i<this.editCategoryForm.length;i++){
-        if(id==this.editCategoryForm[i].movieCategoryId){
-          l =false
+
+    ifShow(id) {
+      let i = 0;
+      let l = true;
+
+      for (i = 0; i < this.editCategoryForm.length; i++) {
+        if (id == this.editCategoryForm[i].movieCategoryId) {
+          l = false;
         }
       }
-      return l
+
+      return l;
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getMovieList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getMovieList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getMovieList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getMovieList();
     },
+
     async submitFile() {
-      const _this = this
-      for (let i = 0; i < this.pics.length; i++) {
-        let formData = new FormData()
-        if (this.pics[i].status === 'success') {
-          let s = this.pics[i].url
-          this.pictureList.push(s.substring(s.indexOf('/images')))
-          continue
-        }
-        let file = this.pics[i].raw
-        formData.append('file', file)
-        await axios.post('upload/movie', formData).then(response => {
-          _this.pictureList.push(response.data.data)
-        })
-      }
+      this.pictureList = await uploadPictures(this, this.pics, "movie");
     },
+
     async submitFileP() {
-      const _this = this
-      for (let i = 0; i < this.poster.length; i++) {
-        let formData = new FormData()
-        if (this.poster[i].status === 'success') {
-          let s = this.poster[i].url
-          this.posterL.push(s.substring(s.indexOf('/images')))
-          continue
-        }
-        let file = this.poster[i].raw
-        formData.append('file', file)
-        await axios.post('upload/movie', formData).then(response => {
-          _this.posterL.push(response.data.data)
-        })
-      }
+      this.posterL = await uploadPictures(this, this.poster, "movie");
     },
+
     // 监听添加对话框的关闭事件
     addDialogClosed() {
-      this.$refs.addFormRef.resetFields()
-      this.$refs.pictureRef.clearFiles()
-      this.$refs.posterRef.clearFiles()
-      this.poster = []
-      this.posterL=[]
-      this.pics = []
-      this.pictureList = []
+      this.$refs.addFormRef.resetFields();
+      this.$refs.pictureRef.clearFiles();
+      this.$refs.posterRef.clearFiles();
+      this.poster = [];
+      this.posterL = [];
+      this.pics = [];
+      this.pictureList = [];
     },
+
     // 监听添加按钮
     async addMovie() {
-      await this.submitFile()
-      await this.submitFileP()
-      this.addForm.moviePictures = JSON.stringify(this.pictureList)
-      this.addForm.moviePoster = JSON.stringify(this.posterL)
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        //预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysMovie', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
+      return runMutation(this, "addMovie", async () => {
+        await this.submitFile();
+        await this.submitFileP();
+        this.addForm.moviePictures = JSON.stringify(this.pictureList);
+        this.addForm.moviePoster = JSON.stringify(this.posterL);
+
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysMovie', JSON.stringify(_this.addForm))).then(resp => {
           if (resp.data.code !== 200) {
-            this.$message.error('添加电影信息失败！')
+            this.$message.error('添加电影信息失败！');
           }
-        })
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getMovieList()
-        this.$message.success('添加电影信息成功！')
-      })
+        }); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getMovieList();
+        this.$message.success('添加电影信息成功！');
+      });
     },
+
     // 监听修改对话框的关闭事件
     editDialogClosed() {
-      this.$refs.editFormRef.resetFields()
-      this.$refs.pictureEditRef.clearFiles()
-      this.$refs.posterEditRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
-      this.posterL = []
-      this.poster = []
+      this.$refs.editFormRef.resetFields();
+      this.$refs.pictureEditRef.clearFiles();
+      this.$refs.posterEditRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
+      this.posterL = [];
+      this.poster = [];
     },
+
     //监听修改演员对话框的关闭事件
-    editActorDialogClosed(){
-      this.selectedMovieCategory = ''
-      this.selectedMovieActor = ''
-      this.selectedMovieRole = ''
-      this.$refs.editActorFormRef.resetFields()
+    editActorDialogClosed() {
+      this.selectedMovieCategory = '';
+      this.selectedMovieActor = '';
+      this.selectedMovieRole = '';
+      this.$refs.editActorFormRef.resetFields();
     },
+
     //修改演员对话框
     // async editActorInfo() {
     //   this.$refs.editActorFormRef.validate(async valid => {
@@ -621,262 +654,290 @@ export default {
     //     this.$message.success('修改演员信息成功!')
     //   })
     // },
-
     // 修改电影信息对话框
     async editHallInfo() {
-      await this.submitFile()
-      this.editForm.moviePictures = JSON.stringify(this.pictureList)
-      await this.submitFileP()
-      this.editForm.moviePoster = JSON.stringify(this.posterL)
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('sysMovie', JSON.stringify(_this.editForm)).then(resp => {
+      return runMutation(this, "editHallInfo", async () => {
+        await this.submitFile();
+        this.editForm.moviePictures = JSON.stringify(this.pictureList);
+        await this.submitFileP();
+        this.editForm.moviePoster = JSON.stringify(this.posterL);
+
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        let success = true;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysMovie', JSON.stringify(_this.editForm))).then(resp => {
           if (resp.data.code !== 200) {
-            this.$message.error('修改电影信息失败！')
-            success = false
+            this.$message.error('修改电影信息失败！');
+            success = false;
           }
-        })
-        if (!success) return
-        for(let s of this.deletePicList){
-          await axios.get('/upload/delete?filePath=' + s.substring(s.indexOf('/images')))
+        });
+        if (!success) return;
+
+        for (let s of this.deletePicList) {
+          try { await checkedRequest(axios.get('/upload/delete', {params:{filePath:s.substring(s.indexOf('/images'))}})); } catch(error) { this.$message.warning('资料已保存，旧图片清理失败'); }
         }
-        for(let s of this.deletePostList){
-          await axios.get('/upload/delete?filePath=' + s.substring(s.indexOf('/images')))
+
+        for (let s of this.deletePostList) {
+          try { await checkedRequest(axios.get('/upload/delete', {params:{filePath:s.substring(s.indexOf('/images'))}})); } catch(error) { this.$message.warning('资料已保存，旧图片清理失败'); }
         }
-        this.editDialogVisible = false
-        this.getMovieList()
-        this.$message.success('修改电影信息成功！')
-      })
+
+        this.editDialogVisible = false;
+        this.getMovieList();
+        this.$message.success('修改电影信息成功！');
+      });
     },
+
     handleChange(file, filelist) {
-      this.pics = filelist.slice(0)
-      console.log(this.pics)
+      this.pics = filelist.slice(0);
     },
+
     handleChangeP(file, filelist) {
-      this.poster = filelist
-      console.log(this.poster)
+      this.poster = filelist;
     },
+
     handleSuccess(response) {
-      this.pictureList.push(response.data)
-      this.addForm = JSON.stringify(this.pictureList)
-      this.editForm = JSON.stringify(this.pictureList)
+      this.pictureList.push(response.data);
     },
+
     handleSuccessP(response) {
-      this.posterL.push(response.data)
-      this.addForm = JSON.stringify(this.posterL)
-      this.editForm = JSON.stringify(this.posterL)
+      this.posterL.push(response.data);
     },
+
     handlePictureCardPreview(file) {
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
+
     handlePictureCardPreviewP(file) {
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
-    handleRemove(file,filelist) {
-      const filePath = file.url
-      console.log(filePath)
-      const idx = this.pics.findIndex(x => x.url === filePath)
-      if(file.status === 'success'){
-        this.deletePicList.push(file.url)
+
+    handleRemove(file, filelist) {
+      const filePath = file.url;
+      const idx = this.pics.findIndex(x => x.url === filePath);
+
+      if (file.status === 'success') {
+        this.deletePicList.push(file.url);
       }
-      this.pics.splice(idx, 1)
+
+      this.pics.splice(idx, 1);
     },
+
     handleRemoveP(file) {
-      const filePath = file.url
-      console.log(filePath)
-      const idx = this.poster.findIndex(x=> x.url === filePath)
-      if(file.status === 'success'){
-        this.deletePostList.push(file.url)
+      const filePath = file.url;
+      const idx = this.poster.findIndex(x => x.url === filePath);
+
+      if (file.status === 'success') {
+        this.deletePostList.push(file.url);
       }
-      this.poster.splice(idx,1)
+
+      this.poster.splice(idx, 1);
     },
-    handleError(err) {
-      console.log(err)
-    },
+
+    handleError(err) {},
+
     // 显示修改对话框，回显数据
     async showEditDialog(id1) {
-      const _this = this
-      await axios.get('sysMovie/' + id1).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      for (const item of JSON.parse(this.editForm.moviePictures)) {
-        let pic = {}
-        pic['name'] = ''
-        pic['url'] = this.global.base + item
-        this.pics.push(pic)
-      }
-      for (const item of JSON.parse(this.editForm.moviePoster)) {
-        let pic = {}
-        pic['name'] = ''
-        pic['url'] = this.global.base + item
-        this.poster.push(pic)
-      }
-      this.editDialogVisible = true
+      return runMutation(this, "showEditDialog", async () => {
+        this.pictureList = [];
+        this.deletePicList = [];
+        this.posterL = [];
+        this.deletePostList = [];
+        this.poster = [];
+        this.posterL = [];
+        this.deletePostList = [];
+        this.pics = [];
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovie/' + id1)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+
+        for (const item of pictureArray(this.editForm.moviePictures)) {
+          let pic = {};
+          pic['name'] = '';
+          pic['url'] = this.global.base + item;
+          this.pics.push(pic);
+        }
+
+        for (const item of pictureArray(this.editForm.moviePoster)) {
+          let pic = {};
+          pic['name'] = '';
+          pic['url'] = this.global.base + item;
+          this.poster.push(pic);
+        }
+
+        this.editDialogVisible = true;
+      });
     },
+
     //显示修改演员对话框,回显数据
-    async showEditActorDialog(id1){
-      const _this = this
-      _this.actorMovieId = id1
-      await axios.get('sysMovie/find/'+id1).then(response=>{
-        console.log('电影演员列表')
-          console.log(response.data.data)
-        _this.editActorForm = response.data.data.actorRoleList
-        _this.editCategoryForm = response.data.data.movieCategoryList
-        })
-      this.editActorVisible = true
+    async showEditActorDialog(id1) {
+      return runMutation(this, "showEditActorDialog", async () => {
+        const _this = this;
+
+        _this.actorMovieId = id1;
+        await checkedRequest(axios.get('sysMovie/find/' + id1)).then(response => {
+          _this.editActorForm = response.data.data.actorRoleList;
+          _this.editCategoryForm = response.data.data.movieCategoryList;
+        });
+        this.editActorVisible = true;
+      });
     },
+
     //取消修改
-    cancelEdit(){
-      this.editDialogVisible = false
-      this.deletePicList.splice(0,this.deletePicList.length)
-      this.deletePostList.splice(0,this.deletePostList.length)
+    cancelEdit() {
+      this.editDialogVisible = false;
+      this.deletePicList.splice(0, this.deletePicList.length);
+      this.deletePostList.splice(0, this.deletePostList.length);
     },
+
     // 监听多选框变化
     handleSelectionChange(val) {
-      this.multipleSelection = val
+      this.multipleSelection = val;
     },
+
     // 批量删除电影
     async multipleDelete() {
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
-
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel') {
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        let item = data.movieId
-        ids.push(item)
-      })
-      console.log(ids)
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      await axios.delete('sysMovie/' + ids, JSON.stringify(ids)).then(resp => {
-        console.log(123)
-        if (resp.data.code !== 200) {
-          this.$message.success('批量删除电影失败！')
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getMovieList()
-      this.$message.success('批量删除电影成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          let item = data.movieId;
+          ids.push(item);
+        });
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.delete('sysMovie/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除电影失败！');
+          }
+        });
+        this.getMovieList();
+        this.$message.success('批量删除电影成功！');
+      });
     },
+
     // 单个删除电影
     async deleteMovieById(id1) {
-      let deleteInfo = id1
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+      return runMutation(this, "deleteMovieById", async () => {
+        let deleteInfo = id1;
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel') {
-        return _this.$message.info('已取消删除')
-      }
+        const _this = this; //询问用户是否确认删除
 
-      console.log(deleteInfo)
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      await axios.delete('sysMovie/' + deleteInfo, JSON.stringify(deleteInfo)).then(resp => {
-        if (resp.data.code !== 200) {
-          _this.$message.success('删除电影信息失败！')
+
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getMovieList()
-      this.$message.success('删除电影信息成功！')
-    },
-    async deleteActor(rid,aid){
-      console.log('aid:'+aid)
-      for(let i = 0;i < this.editActorForm.length;i++){
-        if(rid == this.editActorForm[i].actorRoleId){
-          console.log('this.editForm.actorList:'+this.editActorForm[i].actorList)
-          for(let j = 0;j < this.editActorForm[i].actorList.length;j++){
-            if(aid == this.editActorForm[i].actorList[j].actorId){
-              this.editActorForm[i].actorList.splice(j,1)
-              if(this.editActorForm[i].actorList.length==0){
-                this.editActorForm.splice(i,1)
-              }
-              break
-            }
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.delete('sysMovie/' + deleteInfo)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除电影信息失败！');
           }
-        }
-      }
-      const _this = this
-      console.log(111)
-      await axios.delete('sysActorMovie/'+_this.actorMovieId+'/'+aid+'/'+rid).then(resp =>{
-        if(resp.data.code!== 200){
-          _this.$message.success('删除演员信息失败!')
-        }
-      })
-      this.$message.success('删除演员信息成功')
+        });
+        this.getMovieList();
+        this.$message.success('删除电影信息成功！');
+      });
     },
-    async addActor(){
-      if(this.selectedMovieRole&&this.selectedMovieActor){
-      let obj = {
-        movieId :this.actorMovieId,
-        actorId:this.selectedMovieActor,
-        actorRoleId:this.selectedMovieRole
-      }
-      const _this = this
-        let success = true
-      await axios.post('sysActorMovie',obj).then(resp=>{
-        if(resp.data.code!== 200){
-          _this.$message.error('添加演员信息失败!')
-          success = false;
-        }
-      })
-        if(!success) return
-        await axios.get('sysMovie/find/'+_this.actorMovieId).then(response=>{
-          console.log('电影演员列表')
-          console.log(response.data.data)
-          _this.editActorForm = response.data.data.actorRoleList
-        })
-      this.$message.success('添加演员信息成功')
-      }
-    },
-    async deleteCategory(categoryId){
-      console.log('类型id')
-      console.log(categoryId)
-      const _this = this
-      await axios.delete('sysMovieToCategory/'+this.actorMovieId+'/'+categoryId).then(resp=>{
-        console.log(resp)
-        _this.$message.success('删除类型成功')
-      })
-      await axios.get('sysMovie/find/'+this.actorMovieId).then(response=>{
-        _this.editCategoryForm = response.data.data.movieCategoryList
-      })
-    },
-    handleExceed(){
-      this.$message.error('电影封面不能超过一张!')
-    },
-    async addCategory(){
-      const _this = this
-      await axios.post('sysMovieToCategory/'+this.actorMovieId+'/'+this.selectedMovieCategory).then(resp=>{
-        console.log(resp)
 
-      })
-      axios.get('sysMovie/find/'+this.actorMovieId).then(response=>{
-        _this.editCategoryForm = response.data.data.movieCategoryList
-      })
+    async deleteActor(rid, aid) {
+      return runMutation(this, 'deleteActor', async () => {
+        await checkedRequest(axios.delete('sysActorMovie/' + this.actorMovieId + '/' + aid + '/' + rid));
+        const { data } = await checkedRequest(axios.get('sysMovie/find/' + this.actorMovieId));
+        this.editActorForm = data.data.actorRoleList || [];
+        this.$message.success('删除演员信息成功');
+      });
+    },
+
+    async addActor() {
+      return runMutation(this, "addActor", async () => {
+        if (this.selectedMovieRole && this.selectedMovieActor) {
+          let obj = {
+            movieId: this.actorMovieId,
+            actorId: this.selectedMovieActor,
+            actorRoleId: this.selectedMovieRole
+          };
+
+          const _this = this;
+
+          let success = true;
+          await checkedRequest(axios.post('sysActorMovie', obj)).then(resp => {
+            if (resp.data.code !== 200) {
+              _this.$message.error('添加演员信息失败!');
+
+              success = false;
+            }
+          });
+          if (!success) return;
+          await checkedRequest(axios.get('sysMovie/find/' + _this.actorMovieId)).then(response => {
+            _this.editActorForm = response.data.data.actorRoleList;
+          });
+          this.$message.success('添加演员信息成功');
+        }
+      });
+    },
+
+    async deleteCategory(categoryId) {
+      return runMutation(this, "deleteCategory", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.delete('sysMovieToCategory/' + this.actorMovieId + '/' + categoryId)).then(resp => {
+          _this.$message.success('删除类型成功');
+        });
+        await checkedRequest(axios.get('sysMovie/find/' + this.actorMovieId)).then(response => {
+          _this.editCategoryForm = response.data.data.movieCategoryList;
+        });
+      });
+    },
+
+    handleExceed() {
+      this.$message.error('电影封面不能超过一张!');
+    },
+
+    async addCategory() {
+      return runMutation(this, "addCategory", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.post('sysMovieToCategory/' + this.actorMovieId + '/' + this.selectedMovieCategory)).then(resp => {});
+        await checkedRequest(axios.get('sysMovie/find/' + this.actorMovieId)).then(response => {
+          _this.editCategoryForm = response.data.data.movieCategoryList;
+        });
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

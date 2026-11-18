@@ -83,10 +83,12 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
-import moment from 'moment'
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
+import moment from 'moment';
 export default {
   name: "movieComment",
+
   // this.$message和this.$confirm都属于原型挂载, 在element.js中配置
   // Vue.prototype.$message = Message
   // Vue.prototype.$confirm = MessageBox.confirm
@@ -102,145 +104,192 @@ export default {
       total: 0,
       //控制对话框的显示与隐藏
       addDialogVisible: false,
-      addForm:{
-        movieId:'',
-        userId:'',
-        commentTime:'',
-        content:'',
-        score:''
+      addForm: {
+        movieId: '',
+        userId: '',
+        commentTime: '',
+        content: '',
+        score: ''
       },
-      addFormRules:{
-        content:[
-          { required: true, message: '请输入评论内容', trigger: 'blur' }
-        ],
-        score:[
-          { required:true, message:'请输入评分信息', trigger:'blur' },
-          { min:0, max:10, message: '评分应在0~10之间', trigger: 'blur' }
-        ]
+      addFormRules: {
+        content: [{
+          required: true,
+          message: '请输入评论内容',
+          trigger: 'blur'
+        }],
+        score: [{
+          required: true,
+          message: '请输入评分信息',
+          trigger: 'blur'
+        }, {
+          min: 0,
+          max: 10,
+          message: '评分应在0~10之间',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: []
-    }
+    };
   },
+
   created() {
-    this.getMovieCommentList()
-    this.getMovieList()
+    this.getMovieCommentList();
+    this.getMovieList();
   },
+
   methods: {
-    getMovieCommentList() {
-      const _this = this;
-      axios.get('sysMovieComment', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.moviecommentlist = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getMovieCommentList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieComment', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.moviecommentlist = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
-    async getMovieList(){
-      const { data : res } = await axios.get('sysMovie')
-      if(res.code !== 200) return this.$message.error('获取信息失败')
-      this.movieList = res.data
+
+    async getMovieList() {
+      return runRead(this, async () => {
+        const {
+          data: res
+        } = await checkedRequest(axios.get('sysMovie'));
+        if (res.code !== 200) return this.$message.error('获取信息失败');
+        this.movieList = res.data;
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getMovieCommentList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getMovieCommentList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getMovieCommentList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getMovieCommentList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     //监听添加按钮
-    addMovieComment(){
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        if (!valid) return
-        //预校验成功，发网络请求
-        this.addForm.commentTime = moment().format('YYYY-MM-DD HH:MM:SS')
-        this.addForm.userId = JSON.parse(window.sessionStorage.getItem('loginUser')).sysUser.userId
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const { data : res } = await axios.post('sysMovieComment', JSON.stringify(_this.addForm))
-        if(res.code !== 200) return this.$message.error('添加影评失败')
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getMovieCommentList()
-        this.$message.success('添加电影评论成功！')
-      })
+    async addMovieComment() {
+      return runMutation(this, "addMovieComment", async () => {
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        this.addForm.commentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+        this.addForm.userId = JSON.parse(window.sessionStorage.getItem('loginUser')).sysUser.userId;
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.post('sysMovieComment', JSON.stringify(_this.addForm)));
+        if (res.code !== 200) return this.$message.error('添加影评失败'); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getMovieCommentList();
+        this.$message.success('添加电影评论成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.movieId)
-      })
-      await axios.delete('sysMovieComment/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除电影评论失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getMovieCommentList()
-      this.$message.success('批量删除电影评论成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push({
+            movieId: data.movieId,
+            userId: data.userId,
+            commentTime: data.commentTime,
+            score: data.score
+          });
+        });
+        await checkedRequest(axios.post('sysMovieComment/delete', ids, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除电影评论失败！');
+          }
+        });
+        this.getMovieCommentList();
+        this.$message.success('批量删除电影评论成功！');
+      });
     },
+
     //根据id删除对应的电影评论
-    async deleteMovieComment(id1,id2,time,c,s){
-      let deleteInfo = [{
-        movieId : id1,
-        userId : id2,
-        commentTime : time,
-        content : c,
-        score : s
-      }]
-      console.log(deleteInfo);
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteMovieComment(id1, id2, time, c, s) {
+      return runMutation(this, "deleteMovieComment", async () => {
+        let deleteInfo = [{
+          movieId: id1,
+          userId: id2,
+          commentTime: time,
+          content: c,
+          score: s
+        }];
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      await axios.post('sysMovieComment/delete', JSON.stringify(deleteInfo)).then(resp => {
-        console.log(resp);
-        console.log(deleteInfo)
-        if (resp.data.code !== 200){
-          _this.$message.success('删除电影评论失败！')
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getMovieCommentList()
-      this.$message.success('删除电影评论成功！')
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysMovieComment/delete', JSON.stringify(deleteInfo))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除电影评论失败！');
+          }
+        });
+        this.getMovieCommentList();
+        this.$message.success('删除电影评论成功！');
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

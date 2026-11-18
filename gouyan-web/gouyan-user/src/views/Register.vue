@@ -1,133 +1,58 @@
 <template>
-  <div class="register-container">
-    <div class="header" @click="toWelcome">
-      <img src="../assets/registerLogo.jpg" style="width: 230px; height: 54px;">
-    </div>
-    <div class="register-body">
-      <el-form class="register-form" ref="registerFormRef" :model="registerForm" :rules="registerFormRules" label-width="80px">
-        <el-form-item label="用户名" prop="userName">
-          <el-input v-model="registerForm.userName"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="registerForm.password" type="password"></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="registerForm.confirmPassword" type="password"></el-input>
-        </el-form-item>
-        <el-form-item label="性别">
-          <el-radio v-model="gender" label="0">女</el-radio>
-          <el-radio v-model="gender" label="1">男</el-radio>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="register">同意以下协议并注册</el-button>
-        </el-form-item>
-        <el-form-item id="protocal">
-          <el-link type="primary" style="line-height: 14px;">《假装有协议》</el-link>
-          <el-link type="primary" style="line-height: 14px;">《这里无协议》</el-link>
-        </el-form-item>
-      </el-form>
-      <img src="../assets/register.png">
-    </div>
-    <div class="footer-mini"></div>
-<!--    <div class="footer">-->
-<!--      <img style="width: 357px; height: 50px" src="../assets/register-footer.pngback">-->
-<!--    </div>-->
-  </div>
+  <AccountLayout title="创建账号" subtitle="加入狗眼电影，开启你的光影之旅">
+    <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" class="account-error" role="alert" />
+    <el-form ref="form" :model="form" :rules="rules" class="account-form" label-position="top" :disabled="submitting || verifying" @submit.native.prevent="startVerification">
+      <el-form-item label="用户名" prop="userName"><el-input v-model.trim="form.userName" placeholder="2–20个字符" maxlength="20" autocomplete="username" /></el-form-item>
+      <el-form-item label="邮箱" prop="email"><el-input v-model.trim="form.email" type="email" placeholder="请输入本人可用邮箱" maxlength="254" autocomplete="email" /><p class="account-help">用于找回密码，请确认邮箱填写正确。</p></el-form-item>
+      <el-form-item label="密码" prop="password"><el-input v-model="form.password" placeholder="6–16个字符" show-password maxlength="16" autocomplete="new-password" @input="revalidateConfirmation" /></el-form-item>
+      <el-form-item label="确认密码" prop="confirmPassword"><el-input v-model="form.confirmPassword" placeholder="请再次输入密码" show-password maxlength="16" autocomplete="new-password" /></el-form-item>
+      <el-form-item label="性别"><el-radio-group v-model="form.sex"><el-radio :label="false">女</el-radio><el-radio :label="true">男</el-radio></el-radio-group></el-form-item>
+      <el-button native-type="submit" class="account-submit" :loading="submitting" :disabled="verifying">{{ verifying ? '请完成图形验证' : '验证并注册' }}</el-button>
+    </el-form>
+    <div class="account-links"><span>已有账号？</span><router-link to="/login">立即登录 <i class="el-icon-right"></i></router-link></div>
+    <Verify ref="verify" mode="pop" captcha-type="blockPuzzle" :img-size="captchaSize" @success="register" @close="verifying = false" />
+  </AccountLayout>
 </template>
-
 <script>
+import AccountLayout from '@/components/account/AccountLayout'
+import Verify from '@/components/verifition/Verify'
+import '@/assets/css/account.css'
 export default {
-  name: "Register",
+  name: 'Register', components: { AccountLayout, Verify },
   data() {
-    var validatePass = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请再次输入密码'))
-        // password 是表单上绑定的字段
-      } else if (value !== this.registerForm.password) {
-        callback(new Error('两次输入密码不一致!'))
-      } else {
-        callback()
-      }
-    }
+    const confirm = (rule, value, callback) => callback(value === this.form.password ? undefined : new Error('两次输入的密码不一致'))
     return {
-      gender: '0',
-      registerForm: {
-        userName: '',
-        password: '',
-        confirmPassword: '',
-        sex: '',
+      form: { userName: '', email: '', password: '', confirmPassword: '', sex: false },
+      rules: {
+        userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 20, message: '用户名为2–20个字符', trigger: 'blur' }],
+        email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 16, message: '密码为6–16个字符', trigger: 'blur' }],
+        confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }, { validator: confirm, trigger: 'blur' }]
       },
-      registerFormRules: {
-        userName: [
-          { required: true, message: "请输入用户名称", trigger: "blur"},
-          { min: 2, max: 20, message: "长度在2到20个字符之间", trigger: "blur"}
-        ],
-        password: [
-          { required: true, message: "请输入密码", trigger: "blur"},
-          { min:6, max: 16, message: "长度在6到16个字符之间", trigger: "blur"}
-        ],
-        confirmPassword: [
-          { required: true, validator: validatePass, message: "两次密码输入不一致", trigger: "blur"},
-        ]
-      }
+      submitting: false, verifying: false, errorMessage: '', pending: null,
+      captchaSize: { width: '280px', height: '132px' }
     }
   },
-  methods:{
-    register(){
-      this.$refs.registerFormRef.validate(async valid =>{
-        if(!valid) return
-        this.registerForm.sex = this.gender === '1'
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const { data: res} = await axios.post('sysUser', JSON.stringify(this.registerForm));
-        if(res.code != 200) return this.$message.error(res.msg);
-
-        this.$message.success("注册完成！");
-        this.$router.push('/login')
-        this.$refs.registerFormRef.resetFields()
+  methods: {
+    revalidateConfirmation() { if (this.form.confirmPassword) this.$refs.form.validateField('confirmPassword') },
+    startVerification() {
+      if (this.submitting || this.verifying) return
+      this.$refs.form.validate(valid => {
+        if (!valid) return
+        this.errorMessage = ''; this.pending = { ...this.form }; this.verifying = true; this.$refs.verify.show()
       })
     },
-    toWelcome(){
-      this.$router.push('/welcome')
+    async register({ captchaVerification }) {
+      if (this.submitting || !this.pending) return
+      this.submitting = true; this.verifying = false
+      try {
+        const { data } = await axios.post('sysUser/register', { ...this.pending, captchaVerification }, { headers: { 'Content-Type': 'application/json' } })
+        if (data.code !== 200) { this.errorMessage = data.msg || '注册失败，请重试'; return }
+        this.$message.success('注册成功，请使用新账号登录')
+        this.$router.push({ path: '/login', query: { userName: this.pending.userName } })
+      } catch (error) { this.errorMessage = '注册未完成，请检查网络后重新验证' }
+      finally { this.submitting = false; this.pending = null }
     }
   }
 }
 </script>
-
-<style scoped>
-.register-container{
-  width: 100%;
-  height: 100%;
-}
-
-.header{
-  height: 60px;
-  border-bottom: deepskyblue solid 2px;
-  padding-top: 6px;
-  padding-left: 500px;
-  padding-bottom: 0;
-  cursor: pointer;
-}
-
-.register-body{
-  display: flex;
-  padding-top: 50px;
-}
-
-.register-form{
-  width: 20%;
-  margin-left: 25%;
-  margin-right: 5%;
-}
-
-.footer-mini{
-  border-top: 1px solid #EEE;
-  padding-top: 20px;
-  text-align: center;
-}
-
-.footer{
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-</style>

@@ -132,6 +132,10 @@ tail -f .runtime/bill.log
 - 管理后台：<http://127.0.0.1:8888>
 - 课程演示账号：`admin / 123456`
 
+前台支持注册和通过绑定邮箱找回密码，复用现有拼图验证码。真实邮件发送需要配置 SMTP 并重启认证服务，详见 [账号注册与密码找回](gouyan-cloud/gouyan-auth/ACCOUNT_RECOVERY.md)。未配置邮件服务不影响登录或注册。
+
+Windows QQ 邮箱可在项目根目录运行 `powershell -NoProfile -File scripts/configure-mail.ps1` 安全配置；启动器自动加载本机加密凭据。用户资料保存无需输入密码，后台编辑时“新密码”留空会保留原密码。
+
 ## 6. 集成回归
 
 正常模式启动后执行：
@@ -197,3 +201,7 @@ GOUYAN_USERNAME=admin GOUYAN_PASSWORD='课程演示账号密码' \
 ### 停止后仍有进程
 
 脚本只管理自己记录的 PID 和端口。运行 `./scripts/status.sh` 确认状态，并检查对应 `.runtime` 日志；启动脚本之前已存在的服务需要由其原启动方式停止。
+
+## 管理后台验证记录
+
+后台增删改修复、首页统计口径与回归结果见 [ADMIN_CRUD_VERIFICATION.md](ADMIN_CRUD_VERIFICATION.md)。

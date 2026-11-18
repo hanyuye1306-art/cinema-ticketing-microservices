@@ -1,148 +1,59 @@
 <template>
-  <div class="login_container">
-    <div class="login_box">
-      <!-- 头像区域 -->
-      <div class="avatar_box">
-        <img src="../assets/logo.jpg">
-      </div>
-      <!-- 登录表单区域 -->
-      <el-form class="login_form" :model="loginForm" :rules="loginFormRules" ref="loginFormRef">
-        <!-- 用户名 -->
-        <el-form-item prop="userName">
-          <el-input v-model="loginForm.userName" prefix-icon="iconfont icon-user" placeholder="请输入用户名"></el-input>
-        </el-form-item>
-        <!-- 密码 -->
-        <el-form-item prop="password">
-          <el-input v-model="loginForm.password" prefix-icon="iconfont icon-lock" placeholder="请输入密码" type="password"></el-input>
-        </el-form-item>
-        <!-- 按扭区域 -->
-        <el-form-item class="btns">
-          <el-button size="medium" :round="true" type="primary" @click="useVerify">点击登录</el-button>
-          <el-button size="medium" :round="true" type="warning" @click="registerAccount">注册帐号</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div>
-      <!-- 拼图验证码 -->
-      <Verify
-          @success="success"
-          :mode="'pop'"
-          :captchaType="'blockPuzzle'"
-          :imgSize="{ width: '330px', height: '155px' }"
-          ref="verify" ></Verify>
-    </div>
-  </div>
+  <AccountLayout title="欢迎回来" subtitle="登录账号，继续你的观影计划">
+    <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" class="account-error" role="alert" />
+    <el-form ref="form" :model="form" :rules="rules" class="account-form" label-position="top" :disabled="submitting || verifying" @submit.native.prevent="startVerification">
+      <el-form-item label="用户名" prop="userName"><el-input v-model.trim="form.userName" prefix-icon="el-icon-user" placeholder="请输入用户名" maxlength="20" autocomplete="username" /></el-form-item>
+      <el-form-item label="密码" prop="password"><el-input v-model="form.password" prefix-icon="el-icon-lock" placeholder="请输入密码" show-password maxlength="16" autocomplete="current-password" /></el-form-item>
+      <div class="forgot-link"><router-link to="/forgot-password" class="account-inline-link">忘记密码？</router-link></div>
+      <el-button native-type="submit" class="account-submit" :loading="submitting" :disabled="verifying">{{ verifying ? '请完成图形验证' : '验证并登录' }}</el-button>
+    </el-form>
+    <div class="account-links"><span>还没有账号？</span><router-link to="/register">立即注册 <i class="el-icon-right"></i></router-link></div>
+    <Verify ref="verify" mode="pop" captcha-type="blockPuzzle" :img-size="captchaSize" @success="login" @close="verifying = false" />
+  </AccountLayout>
 </template>
-
 <script>
-import Verify from "./../components/verifition/Verify";
+import AccountLayout from '@/components/account/AccountLayout'
+import Verify from '@/components/verifition/Verify'
+import '@/assets/css/account.css'
 export default {
-  name: "Login",
-  components: {
-    Verify
-  },
+  name: 'Login', components: { AccountLayout, Verify },
   data() {
     return {
-      //登录表单数据对象
-      loginForm:{
-        userName : 'admin',
-        password : '123456'
+      form: { userName: this.$route.query.userName || '', password: '' },
+      rules: {
+        userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 20, message: '用户名为2–20个字符', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 16, message: '密码为6–16个字符', trigger: 'blur' }]
       },
-      //表单验证规则
-      loginFormRules: {
-        //验证用户名
-        userName: [
-          { required: true, message: "请输入用户名称", trigger: "blur"},
-          { min:2, max: 20, message: "长度在2到20个字符之间", trigger: "blur"}
-        ],
-        //验证密码
-        password: [
-          { required: true, message: "请输入密码", trigger: "blur"},
-          { min:6, max: 16, message: "长度在6到16个字符之间", trigger: "blur"}
-        ]
-      }
+      submitting: false, verifying: false, errorMessage: '', pending: null,
+      captchaSize: { width: '280px', height: '132px' }
     }
   },
-  methods:{
-    success(params){
-      this.login()
-    },
-    useVerify(){
-      this.$refs.verify.show()
-    },
-    login(){
-      this.$refs.loginFormRef.validate(async valid =>{
-        if(!valid) return;
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const { data: res} = await axios.post('sysUser/login', JSON.stringify(this.loginForm));
-        if(res.code != 200) return this.$message.error(res.msg);
-
-        this.$message.success({message: "登录成功", duration: 1000});
-        //console.log(res.data);
-        //保存token
-        window.sessionStorage.setItem("token", res.data.token);
-        res.data.sysUser.sysRole = null
-        window.sessionStorage.setItem("loginUser", JSON.stringify(res.data.sysUser));
-        //导航跳转到首页
-        this.$router.push('/welcome');
+  methods: {
+    startVerification() {
+      if (this.submitting || this.verifying) return
+      this.$refs.form.validate(valid => {
+        if (!valid) return
+        this.errorMessage = ''; this.pending = { ...this.form }; this.verifying = true; this.$refs.verify.show()
       })
     },
-    registerAccount(){
-      this.$router.push('/register')
+    async login({ captchaVerification }) {
+      if (this.submitting || !this.pending) return
+      this.submitting = true; this.verifying = false
+      try {
+        const { data } = await axios.post('sysUser/login', { ...this.pending, captchaVerification }, { headers: { 'Content-Type': 'application/json' } })
+        if (data.code !== 200) { this.errorMessage = data.msg || '登录失败，请重试'; return }
+        if (!data.data || !data.data.token || !data.data.sysUser) throw new Error('Invalid login response')
+        window.sessionStorage.setItem('token', data.data.token)
+        data.data.sysUser.sysRole = null
+        window.sessionStorage.setItem('loginUser', JSON.stringify(data.data.sysUser))
+        this.$message.success({ message: '登录成功', duration: 1000 })
+        this.$router.push('/welcome')
+      } catch (error) { this.errorMessage = '登录未完成，请检查网络后重新验证' }
+      finally { this.submitting = false; this.pending = null }
     }
   }
 }
 </script>
-
 <style scoped>
-.login_container{
-  background: url("../assets/login-background.png");
-  background-size: cover;
-  height: 100%;
-}
-
-.login_box{
-  width: 450px;
-  height: 300px;
-  background-color: #fff;
-  border-radius: 3px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.avatar_box{
-  height: 130px;
-  width: 130px;
-  border: 1px solid #eee;
-  border-radius: 50%;
-  padding: 10px;
-  box-shadow: 0 0 10px #ddd;
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-}
-
-.avatar_box > img{
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: #eee;
-}
-
-.login_form{
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
-
-.btns{
-  display: flex;
-  justify-content: center;
-}
+.forgot-link { text-align: right; margin: -6px 0 22px; font-size: 13px; }
 </style>

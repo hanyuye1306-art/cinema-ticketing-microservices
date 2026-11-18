@@ -87,8 +87,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "ActorRole",
+
   // this.$message和this.$confirm都属于原型挂载, 在element.js中配置
   // Vue.prototype.$message = Message
   // Vue.prototype.$confirm = MessageBox.confirm
@@ -109,156 +111,190 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        actorRoleName: [
-          { required: true, message: '请输入演员角色', trigger: 'blur' }
-        ]
+        actorRoleName: [{
+          required: true,
+          message: '请输入演员角色',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        actorRoleName: [
-          { required: true, message: '请输入演员角色', trigger: 'blur' }
-        ]
+        actorRoleName: [{
+          required: true,
+          message: '请输入演员角色',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: []
-    }
+    };
   },
+
   created() {
-    this.getActorRoleList()
+    this.getActorRoleList();
   },
+
   methods: {
-    getActorRoleList() {
-      const _this = this;
-      axios.get('sysActorRole', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.actorrolelist = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getActorRoleList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActorRole', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.actorrolelist = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getActorRoleList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getActorRoleList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getActorRoleList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getActorRoleList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addActorRole(){
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        //预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysActorRole', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加演员角色失败！')
+    async addActorRole() {
+      return runMutation(this, "addActorRole", async () => {
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysActorRole', JSON.stringify(_this.addForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('添加演员角色失败！');
           }
-        })
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getActorRoleList()
-        this.$message.success('添加演员角色成功！')
-      })
+        }); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getActorRoleList();
+        this.$message.success('添加演员角色成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    showEditDialog(id){
-      const _this = this
-      axios.get('sysActorRole/' + id ).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysActorRole/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改影厅分类信息并提交
-    editActorRoleInfo(){
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('sysActorRole', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改演员角色失败！')
+    async editActorRoleInfo() {
+      return runMutation(this, "editActorRoleInfo", async () => {
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysActorRole', JSON.stringify(_this.editForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('修改演员角色失败！');
           }
-        })
-        this.editDialogVisible = false
-        this.getActorRoleList()
-        this.$message.success('修改演员角色成功！')
-      })
+        });
+        this.editDialogVisible = false;
+        this.getActorRoleList();
+        this.$message.success('修改演员角色成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.actorRoleId)
-      })
-      await axios.delete('sysActorRole/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除演员角色失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getActorRoleList()
-      this.$message.success('批量删除演员角色成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.actorRoleId);
+        });
+        await checkedRequest(axios.delete('sysActorRole/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除演员角色失败！');
+          }
+        });
+        this.getActorRoleList();
+        this.$message.success('批量删除演员角色成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteActorRoleById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteActorRoleById(id) {
+      return runMutation(this, "deleteActorRoleById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysActorRole/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除演员角色失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getActorRoleList()
-      this.$message.success('删除演员角色成功！')
+
+        await checkedRequest(axios.delete('sysActorRole/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除演员角色失败！');
+          }
+        });
+        this.getActorRoleList();
+        this.$message.success('删除演员角色成功！');
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

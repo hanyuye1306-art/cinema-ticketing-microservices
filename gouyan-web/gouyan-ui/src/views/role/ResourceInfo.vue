@@ -125,8 +125,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "ResourceInfo",
+
   data() {
     return {
       queryInfo: {
@@ -147,161 +149,209 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        name: [
-          { required: true, message: '请输入资源名', trigger: 'blur' }
-        ],
-        path: [
-          { required: true, message: '请输入资源路径', trigger: 'blur'}
-        ]
+        name: [{
+          required: true,
+          message: '请输入资源名',
+          trigger: 'blur'
+        }],
+        path: [{
+          required: true,
+          message: '请输入资源路径',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        name: [
-          { required: true, message: '请输入资源名', trigger: 'blur' }
-        ],
-        path: [
-          { required: true, message: '请输入资源路径', trigger: 'blur'}
-        ]
+        name: [{
+          required: true,
+          message: '请输入资源名',
+          trigger: 'blur'
+        }],
+        path: [{
+          required: true,
+          message: '请输入资源路径',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: []
-    }
+    };
   },
+
   created() {
-    this.getResourceList()
-    this.getAllResource()
+    this.getResourceList();
+    this.getAllResource();
   },
+
   methods: {
-    async getResourceList(){
-      const {data : res} = await axios.get('sysResource', {params: this.queryInfo})
-      this.resourcelist = res.data;
-      this.total = res.total
-      this.queryInfo.pageNum = res.pageNum
-      this.queryInfo.pageSize = res.pageSize
+    async getResourceList() {
+      return runRead(this, async () => {
+        const {
+          data: res
+        } = await checkedRequest(axios.get('sysResource', {
+          params: this.queryInfo
+        }));
+        this.resourcelist = res.data;
+        this.total = res.total;
+        this.queryInfo.pageNum = res.pageNum;
+        this.queryInfo.pageSize = res.pageSize;
+      });
     },
-    async getAllResource(){
-      const {data : res} = await axios.get('sysResource')
-      this.allResources = res.data;
+
+    async getAllResource() {
+      return runRead(this, async () => {
+        const {
+          data: res
+        } = await checkedRequest(axios.get('sysResource'));
+        this.allResources = res.data;
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getResourceList()
+      this.queryInfo.pageSize = newSize;
+      this.getResourceList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getResourceList()
+      this.queryInfo.pageNum = newPage;
+      this.getResourceList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addResource(){
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        if (!valid) return
-        //预校验成功，发网络请求
-        if(_this.addForm.parentId === null) _this.addForm.parentId = 0
+    async addResource() {
+      return runMutation(this, "addResource", async () => {
+        const _this = this;
 
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const { data : res} = await axios.post('sysResource', JSON.stringify(_this.addForm))
-        if(res.code !== 200) return this.$message.error(res.msg)
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getResourceList()
-        this.$message.success('添加资源信息成功！')
-      })
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        if (_this.addForm.parentId === null) _this.addForm.parentId = 0;
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.post('sysResource', JSON.stringify(_this.addForm)));
+        if (res.code !== 200) return this.$message.error(res.msg); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getResourceList();
+        this.$message.success('添加资源信息成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    async showEditDialog(id){
-      const _this = this
-      await axios.get('sysResource/' + id ).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      if(this.editForm.parentId === 0) this.editForm.parentId = ''
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysResource/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        if (this.editForm.parentId === 0) this.editForm.parentId = '';
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改影厅分类信息并提交
-    editResource(){
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        console.log(this.editForm.parentId)
-        if(this.editForm.parentId === '') this.editForm.parentId = 0
-        console.log(this.editForm.parentId)
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        const {data : res} = await axios.put('sysResource/', JSON.stringify(_this.editForm))
-        if(res.code !== 200) return this.$message.error(res.msg)
+    async editResource() {
+      return runMutation(this, "editResource", async () => {
+        const _valid2 = await validateForm(this.$refs.editFormRef);
 
-        this.editDialogVisible = false
-        await this.getResourceList()
-        this.$message.success('修改资源信息成功！')
-      })
+        const _this = this;
+
+        if (!_valid2) return;
+        if (this.editForm.parentId === '') this.editForm.parentId = 0;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.put('sysResource/', JSON.stringify(_this.editForm)));
+        if (res.code !== 200) return this.$message.error(res.msg);
+        this.editDialogVisible = false;
+        await this.getResourceList();
+        this.$message.success('修改资源信息成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.id)
-      })
-      await axios.delete('sysResource/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除资源信息失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getResourceList()
-      this.$message.success('批量删除资源信息成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.id);
+        });
+        await checkedRequest(axios.delete('sysResource/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除资源信息失败！');
+          }
+        });
+        this.getResourceList();
+        this.$message.success('批量删除资源信息成功！');
+      });
     },
+
     //根据id删除对应的资源信息
-    async deleteResourceById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteResourceById(id) {
+      return runMutation(this, "deleteResourceById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysResource/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除资源信息失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getResourceList()
-      this.$message.success('删除资源信息成功！')
+
+        await checkedRequest(axios.delete('sysResource/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除资源信息失败！');
+          }
+        });
+        this.getResourceList();
+        this.$message.success('删除资源信息成功！');
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

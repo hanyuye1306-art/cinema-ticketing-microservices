@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SysMovieRuntimeServiceImpl implements SysMovieRuntimeService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     private SysMovieRuntimeMapper sysMovieRuntimeMapper;
@@ -35,7 +39,9 @@ public class SysMovieRuntimeServiceImpl implements SysMovieRuntimeService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysMovieRuntime", ids);
         int rows = 0;
         for(Long id : ids){
             rows += sysMovieRuntimeMapper.delete(id);

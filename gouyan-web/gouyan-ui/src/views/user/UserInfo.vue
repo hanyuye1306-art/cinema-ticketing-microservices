@@ -154,8 +154,8 @@
         <el-form-item label="用户名" prop="userName">
           <el-input v-model="editForm.userName"></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="editForm.password" type="password" show-password></el-input>
+        <el-form-item label="新密码" prop="password">
+          <el-input v-model="editForm.password" type="password" show-password maxlength="16" autocomplete="new-password" placeholder="留空则保持原密码"></el-input>
         </el-form-item>
         <el-form-item label="电子邮箱" prop="email">
           <el-input v-model="editForm.email"></el-input>
@@ -216,30 +216,37 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cancelEdit">取 消</el-button>
-        <el-button type="primary" @click="editUserInfo">确 定</el-button>
+      <el-button type="primary" :loading="savingEdit" @click="editUserInfo">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
   data() {
     let checkEmail = (rule, value, cb) => {
-      const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/
-      if (regEmail.test(value)){
-        return cb()
+      const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
+
+      if (regEmail.test(value)) {
+        return cb();
       }
-      cb(new Error('请输入合法的邮箱'))
-    }
+
+      cb(new Error('请输入合法的邮箱'));
+    };
+
     let checkMobile = (rule, value, cb) => {
-      const regMobile = /^(0|86|17951)?(13[0-9]|15[0123456789]|17[678]|18[0-9]|14[57])[0-9]{8}$/
-      if (regMobile.test(value)){
-        return cb()
+      const regMobile = /^(0|86|17951)?(13[0-9]|15[0123456789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+
+      if (regMobile.test(value)) {
+        return cb();
       }
-      cb(new Error('请输入合法的手机号码'))
-    }
+
+      cb(new Error('请输入合法的手机号码'));
+    };
+
     return {
       queryInfo: {
         userName: '',
@@ -265,60 +272,80 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        userName: [
-          { required: true, message: '请输入用户名', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: '请输入电子邮箱', trigger: 'blur' },
-          { validator: checkEmail, trigger: 'blur'}
-        ],
-        phoneNumber: [
-          { required: true, message: '请输入手机号码', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur'}
-        ],
-        sex: [
-          { required: true, message: '请选择性别', trigger: 'change' }
-        ]
+        userName: [{
+          required: true,
+          message: '请输入用户名',
+          trigger: 'blur'
+        }],
+        password: [{
+          required: true,
+          message: '请输入密码',
+          trigger: 'blur'
+        }],
+        email: [{
+          required: true,
+          message: '请输入电子邮箱',
+          trigger: 'blur'
+        }, {
+          validator: checkEmail,
+          trigger: 'blur'
+        }],
+        phoneNumber: [{
+          required: true,
+          message: '请输入手机号码',
+          trigger: 'blur'
+        }, {
+          validator: checkMobile,
+          trigger: 'blur'
+        }],
+        sex: [{
+          required: true,
+          message: '请选择性别',
+          trigger: 'change'
+        }]
       },
       editDialogVisible: false,
+      savingEdit: false,
       editForm: {},
       editFormRules: {
-        userName: [
-          { required: true, message: '请输入用户名', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: '请输入电子邮箱', trigger: 'blur' },
-          { validator: checkEmail, trigger: 'blur'}
-        ],
-        phoneNumber: [
-          { required: true, message: '请输入手机号码', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur'}
-        ],
-        sex: [
-          { required: true, message: '请选择性别', trigger: 'change' }
-        ]
+        userName: [{
+          required: true,
+          message: '请输入用户名',
+          trigger: 'blur'
+        }],
+        password: [{
+          pattern: /^(?:|(?=.{6,16}$).*\S.*)$/,
+          message: '新密码为6到16个字符，留空保持原密码',
+          trigger: 'blur'
+        }],
+        email: [{
+          type: 'email',
+          message: '请输入正确的邮箱地址',
+          trigger: 'blur'
+        }],
+        phoneNumber: [{
+          pattern: /^(?:1[3-9]\d{9})?$/,
+          message: '请输入正确的11位手机号',
+          trigger: 'blur'
+        }],
+        sex: [{
+          required: true,
+          message: '请选择性别',
+          trigger: 'change'
+        }]
       },
       inputUserName: '',
       inputEmail: '',
       inputPhoneNumber: '',
       selectedSex: '',
       userList: [],
-      gender: [
-        {
-          id: false,
-          name: '女'
-        },
-        {
-          id: true,
-          name: '男'
-        }
-      ],
+      gender: [{
+        id: false,
+        name: '女'
+      }, {
+        id: true,
+        name: '男'
+      }],
       multipleSelection: [],
       dialogImageUrl: '',
       dialogVisible: false,
@@ -329,237 +356,346 @@ export default {
       picNums: 0,
       deletePicList: [],
       roleList: []
-    }
+    };
   },
+
   created() {
-    this.getUserList()
-    this.getRoleList()
+    this.getUserList();
+    this.getRoleList();
   },
+
   methods: {
-    getUserList() {
-      this.queryInfo.userName = this.inputUserName
-      this.queryInfo.email = this.inputEmail
-      this.queryInfo.phoneNumber = this.inputPhoneNumber
-      this.queryInfo.sex = this.selectedSex
-      const _this = this;
-      axios.get('sysUser', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.userList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getUserList() {
+      return runRead(this, async () => {
+        this.queryInfo.userName = this.inputUserName;
+        this.queryInfo.email = this.inputEmail;
+        this.queryInfo.phoneNumber = this.inputPhoneNumber;
+        this.queryInfo.sex = this.selectedSex;
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysUser', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.userList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
-    getRoleList(){
-      const _this = this
-      axios.get('sysRole').then(resp => {
-        _this.roleList = resp.data.data
-      })
+
+    async getRoleList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysRole')).then(resp => {
+          _this.roleList = resp.data.data;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getUserList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getUserList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getUserList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getUserList();
     },
-    showAddDialog(){
-      this.addDialogVisible = true
+
+    showAddDialog() {
+      this.addDialogVisible = true;
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
-      this.$refs.pictureRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
+      this.$refs.pictureRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
     },
+
     // 监听添加按钮
-    async addUser(){
-      await this.submitFile()
-      console.log(this.pictureList)
-      this.addForm.userPicture = JSON.stringify(this.pictureList)
-      let success = true
-      const _this = this
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        // 预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysUser', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加用户失败！')
-            success = false
+    async addUser() {
+      return runMutation(this, "addUser", async () => {
+        await this.submitFile();
+        this.addForm.userPicture = JSON.stringify(this.pictureList);
+        let success = true;
+
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; // 预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysUser', JSON.stringify(_this.addForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('添加用户失败！');
+            success = false;
           }
-        })
-        this.getUserList()
-        if (!success) return
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        this.$message.success('添加用户成功！')
-      })
+        });
+        this.getUserList();
+        if (!success) return; //隐藏添加对话框
+
+        this.addDialogVisible = false;
+        this.$message.success('添加用户成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    async showEditDialog(id){
-      const _this = this
-      await axios.get('sysUser/' + id).then(resp => {
-        _this.editForm = resp.data.data
-      })
-      for (const item of JSON.parse(this.editForm.userPicture)) {
-        let pic = {}
-        pic['name'] = ''
-        pic['url'] = this.global.base + item
-        this.pics.push(pic)
-      }
-      this.editDialogVisible = true
-    },
-    // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
-      this.$refs.pictureEditRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
-    },
-    // 取消修改
-    cancelEdit(){
-      this.editDialogVisible = false
-      this.deletePicList.splice(0, this.deletePicList.length)
-    },
-    async editUserInfo(){
-      await this.submitFile()
-      this.editForm.userPicture = JSON.stringify(this.pictureList)
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('sysUser', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改用户信息失败！')
-            success = false
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        try {
+          const {
+            data
+          } = await checkedRequest(axios.get('sysUser/' + id));
+          if (data.code !== 200 || !data.data) throw new Error(data.msg || '加载用户资料失败');
+          this.editForm = { ...data.data,
+            password: ''
+          };
+          let pictures = [];
+
+          try {
+            pictures = JSON.parse(this.editForm.userPicture || '[]');
+          } catch (error) {
+            /* No valid avatar. */
           }
-        })
-        if (!success) return
-        this.editDialogVisible = false
-        this.getUserList()
-        this.$message.success('修改用户信息成功！')
-        for(let s of this.deletePicList){
-          await axios.get('/upload/delete?filePath=' + s.substring(s.indexOf('/images')))
+
+          this.pics = (Array.isArray(pictures) ? pictures : []).filter(Boolean).map(url => ({
+            name: '头像',
+            url: this.global.base + url,
+            status: 'success'
+          }));
+          this.pictureList = [];
+          this.deletePicList = [];
+          this.editDialogVisible = true;
+        } catch (error) {
+          this.$message.error(error.message || '加载用户资料失败');
         }
-      })
+      });
     },
+
+    // 监听修改对话框的关闭事件
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
+      this.$refs.pictureEditRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
+    },
+
+    // 取消修改
+    cancelEdit() {
+      this.editDialogVisible = false;
+      this.deletePicList.splice(0, this.deletePicList.length);
+    },
+
+    async editUserInfo() {
+      return runMutation(this, "editUserInfo", async () => {
+        if (this.savingEdit) return;
+        const valid = await new Promise(resolve => this.$refs.editFormRef.validate(resolve));
+        if (!valid || this.savingEdit) return;
+        this.savingEdit = true;
+
+        try {
+          await this.submitFile();
+          const payload = { ...this.editForm,
+            userPicture: JSON.stringify(this.pictureList)
+          };
+          if (!payload.password) delete payload.password;
+          delete payload.salt;
+          delete payload.sysRole;
+          const {
+            data
+          } = await checkedRequest(axios.put('sysUser', payload, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }));
+          if (data.code !== 200) throw new Error(data.msg || '修改用户信息失败');
+          if (data.data && data.data.token) window.sessionStorage.setItem('token', data.data.token);
+          const session = JSON.parse(window.sessionStorage.getItem('loginUser') || '{}');
+          const loggedUser = session.sysUser || session;
+
+          if (loggedUser.userId === payload.userId) {
+            const updated = { ...loggedUser,
+              ...payload
+            };
+            delete updated.password;
+            delete updated.salt;
+            window.sessionStorage.setItem('loginUser', JSON.stringify(session.sysUser ? { ...session,
+              sysUser: updated
+            } : updated));
+            this.$root.$emit('user-profile-updated', updated);
+          }
+
+          const removed = this.deletePicList.slice();
+          this.editDialogVisible = false;
+          this.getUserList();
+          this.$message.success('修改用户信息成功！');
+
+          for (const picture of removed) {
+            try {
+              await checkedRequest(axios.get('/upload/delete', {
+                params: {
+                  filePath: picture.substring(picture.indexOf('/images'))
+                }
+              }));
+            } catch (error) {
+              this.$message.warning('资料已保存，旧头像清理失败');
+            }
+          }
+        } catch (error) {
+          this.$message.error(error.message || '修改用户信息失败，请重试');
+        } finally {
+          this.savingEdit = false;
+        }
+      });
+    },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.userId)
-      })
-      console.log(ids)
-      await axios.delete('sysUser/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除用户失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getUserList()
-      this.$message.success('批量删除用户成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.userId);
+        });
+        await checkedRequest(axios.delete('sysUser/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除用户失败！');
+          }
+        });
+        this.getUserList();
+        this.$message.success('批量删除用户成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteUserById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteUserById(id) {
+      return runMutation(this, "deleteUserById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysUser/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除用户失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getUserList()
-      this.$message.success('删除用户成功！')
+
+        await checkedRequest(axios.delete('sysUser/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除用户失败！');
+          }
+        });
+        this.getUserList();
+        this.$message.success('删除用户成功！');
+      });
     },
+
     handleRemove(file) {
-      const filePath = file.url
-      console.log(filePath)
-      const idx = this.pics.findIndex(x => x.url === filePath)
-      if(file.status === 'success'){
-        this.deletePicList.push(file.url)
+      const filePath = file.url;
+      const idx = this.pics.findIndex(x => x.url === filePath);
+
+      if (file.status === 'success') {
+        this.deletePicList.push(file.url);
       }
-      this.pics.splice(idx, 1)
+
+      this.pics.splice(idx, 1);
     },
+
     handlePictureCardPreview(file) {
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
-    handleChange(file, filelist){
-      this.pics = filelist.slice(0)
+
+    handleChange(file, filelist) {
+      this.pics = filelist.slice(0);
     },
-    handleSuccess(response){
-      this.pictureList.push(response.data)
-      this.addForm = JSON.stringify(this.pictureList)
-      this.editForm = JSON.stringify(this.pictureList)
+
+    handleSuccess(response) {
+      this.pictureList.push(response.data);
+
     },
-    handleError(err){
-      console.log(err)
+
+    handleError(err) {},
+
+    handleExceed() {
+      this.$message.error("用户头像最多上传一张！");
     },
-    handleExceed(){
-      this.$message.error("用户头像最多上传一张！")
-    },
-    async submitFile(){
-      const _this = this
-      for (let i = 0; i < this.pics.length; i++){
-        let formData = new FormData()
-        if (this.pics[i].status === 'success') {
-          let s = this.pics[i].url
-          this.pictureList.push(s.substring(s.indexOf('/images')))
-          continue
+
+    async submitFile() {
+      const pictures = [];
+
+      for (let i = 0; i < this.pics.length; i++) {
+        const picture = this.pics[i];
+
+        if (picture.uploadedUrl) {
+          pictures.push(picture.uploadedUrl);
+          continue;
         }
-        let file = this.pics[i].raw
-        formData.append('file', file)
-        await axios.post('upload/user', formData).then(response =>{
-          _this.pictureList.push(response.data.data)
-        })
+
+        if (!picture.raw) {
+          const url = picture.url || '';
+          const index = url.indexOf('/images/');
+          if (index < 0) throw new Error('头像地址无效，请重新选择');
+          pictures.push(url.substring(index));
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('file', picture.raw);
+        const {
+          data
+        } = await checkedRequest(axios.post('upload/user', formData));
+        if (data.code !== 200 || typeof data.data !== 'string' || !data.data.startsWith('/images/')) throw new Error(data.msg || '头像上传失败');
+        this.$set(picture, 'uploadedUrl', data.data);
+        pictures.push(data.data);
       }
+
+      this.pictureList = pictures;
     },
-    sexFormat(row){
-      if (row.sex == true){
-        return '男'
-      }else {
-        return '女'
+
+    sexFormat(row) {
+      if (row.sex == true) {
+        return '男';
+      } else {
+        return '女';
       }
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

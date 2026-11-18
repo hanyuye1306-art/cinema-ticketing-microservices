@@ -35,9 +35,9 @@
         update sys_movie_comment
         set
         <if test="content != null and content != ''">content = #{content},</if>
-        <if test="score != null and score != 0">score = #{score},</if>
-        comment_time = sysdate()
-        where movie_id = #{movieId} and user_id = #{userId}
+        <if test="score != null">score = #{score},</if>
+        comment_time = #{commentTime}
+        where movie_id = #{movieId} and user_id = #{userId} and comment_time = #{commentTime}
     </update>
 
     <update id="delete" parameterType="SysMovieComment">

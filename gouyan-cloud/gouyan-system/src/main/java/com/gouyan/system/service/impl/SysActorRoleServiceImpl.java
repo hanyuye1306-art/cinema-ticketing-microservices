@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SysActorRoleServiceImpl implements SysActorRoleService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     SysActorRoleMapper sysActorRoleMapper;
@@ -35,7 +39,9 @@ public class SysActorRoleServiceImpl implements SysActorRoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysActorRole", ids);
         int rows = 0;
         for(Long id : ids){
             rows += sysActorRoleMapper.delete(id);

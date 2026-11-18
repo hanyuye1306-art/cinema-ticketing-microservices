@@ -20,6 +20,16 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfig {
+    // Services are injected by concrete type throughout the legacy controllers/realm.
+    // Keep transaction-advised services class-based instead of Shiro's default JDK proxies.
+    @Bean
+    @org.springframework.context.annotation.DependsOn("lifecycleBeanPostProcessor")
+    public static org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator creator =
+                new org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator();
+        creator.setProxyTargetClass(true);
+        return creator;
+    }
 
     //创建shiroFilter
     @Bean("shiroFilter")
@@ -31,7 +41,10 @@ public class ShiroConfig {
 
         //配置受限资源
         Map<String, String> map = new LinkedHashMap<>();
-        map.put("/sysUser/**", "anon");//放行
+        map.put("/sysUser/login", "anon");
+        map.put("/sysUser/register", "anon");
+        map.put("/sysUser/password/code", "anon");
+        map.put("/sysUser/password/reset", "anon");
         map.put("/images/**", "anon");//放行图片查询
         map.put("/captcha/**", "anon");//放行验证码请求
         map.put("/**", "jwt");//请求这个资源需要认证与授权

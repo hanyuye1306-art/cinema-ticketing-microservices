@@ -11,11 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.Map;
 import java.util.List;
 
 @RestController
 public class SysMovieCommentController extends BaseController {
+
+    @Autowired private JdbcTemplate jdbc;
 
     @Autowired
     private SysMovieCommentServiceImpl sysMovieCommentService;
@@ -41,69 +45,56 @@ public class SysMovieCommentController extends BaseController {
     }
 
     @PostMapping("/sysMovieComment")
-    public ResponseResult add(@Validated @RequestBody SysMovieComment sysMovieComment){
-        int rows = sysMovieCommentService.add(sysMovieComment);
-        if(rows > 0){
-            //添加成功 修改电影评分和评论人数
-            SysMovie movie = sysMovieService.findById(sysMovieComment.getMovieId());
-            Integer movieRateNum = movie.getMovieRateNum();
-            Double movieScore = movie.getMovieScore();
-            movieScore = (movieScore * movieRateNum + sysMovieComment.getScore()) / (++movieRateNum);
-
-            movie.setMovieScore(movieScore);
-            movie.setMovieRateNum(movieRateNum);
-            sysMovieService.update(movie);
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult add(@Validated @RequestBody SysMovieComment comment) {
+        lockMovie(comment.getMovieId());
+        validateScore(comment);
+        int rows = sysMovieCommentService.add(comment);
+        refreshRating(comment.getMovieId());
         return getResult(rows);
     }
 
     @PutMapping("/sysMovieComment")
-    public ResponseResult update(@Validated @RequestBody SysMovieComment sysMovieComment){
-        //查询原评论信息
-        SysMovieComment originalComment = sysMovieCommentService.findOne(sysMovieComment);
-        if(originalComment == null){
-            throw new DataNotFoundException("原始数据查询失败，请确保输入有效");
-        }
-
-        int rows = sysMovieCommentService.update(sysMovieComment);
-        if(rows > 0){
-            //修改成功，修改电影评分
-            SysMovie movie = sysMovieService.findById(sysMovieComment.getMovieId());
-            Integer movieRateNum = movie.getMovieRateNum();
-            Double movieScore = movie.getMovieScore();
-            movieScore = (movieScore * movieRateNum + sysMovieComment.getScore() - originalComment.getScore()) / movieRateNum;
-            //更新评分
-            movie.setMovieScore(movieScore);
-            sysMovieService.update(movie);
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult update(@Validated @RequestBody SysMovieComment comment) {
+        lockMovie(comment.getMovieId());
+        validateScore(comment);
+        if (sysMovieCommentService.findOne(comment) == null) throw new DataNotFoundException("原评论不存在，请刷新列表");
+        int rows = sysMovieCommentService.update(comment);
+        refreshRating(comment.getMovieId());
         return getResult(rows);
     }
 
     @PostMapping("/sysMovieComment/delete")
-    public ResponseResult delete(@RequestBody SysMovieComment[] pks){
-        int rows = sysMovieCommentService.delete(pks);
-        System.out.println(Arrays.toString(pks));
-        if(rows > 0){
-            //删除成功，修改删除评论后的评分
-            System.out.println("111");
-            for(SysMovieComment comment : pks){
-                System.out.println(comment);
-                SysMovie movie = sysMovieService.findById(comment.getMovieId());
-                Integer movieRateNum = movie.getMovieRateNum();
-                Double movieScore = movie.getMovieScore();
-                if(movieRateNum <= 1){
-                    movieRateNum = 0;
-                    movieScore = 0.0;
-                }else{
-                    movieScore = (movieScore * movieRateNum - comment.getScore()) / (--movieRateNum);
-                }
-
-                movie.setMovieRateNum(movieRateNum);
-                movie.setMovieScore(movieScore);
-                sysMovieService.update(movie);
-            }
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult delete(@RequestBody SysMovieComment[] pks) {
+        if (pks == null || pks.length == 0) throw new DataNotFoundException("请选择需要删除的评论");
+        java.util.TreeSet<Long> movieIds = new java.util.TreeSet<>();
+        for (SysMovieComment pk : pks) {
+            if (pk == null || pk.getMovieId() == null) throw new DataNotFoundException("评论标识无效");
+            movieIds.add(pk.getMovieId());
         }
+        movieIds.forEach(this::lockMovie);
+        for (SysMovieComment pk : pks) {
+            if (sysMovieCommentService.findOne(pk) == null) throw new DataNotFoundException("评论已不存在，请刷新列表");
+        }
+        int rows = sysMovieCommentService.delete(pks);
+        movieIds.forEach(this::refreshRating);
         return getResult(rows);
     }
 
+    private void validateScore(SysMovieComment comment) {
+        if (comment.getScore() == null || !Double.isFinite(comment.getScore()) || comment.getScore() < 0 || comment.getScore() > 10)
+            throw new DataNotFoundException("评分必须在 0 到 10 之间");
+    }
+
+    private void lockMovie(Long movieId) {
+        if (movieId == null || jdbc.queryForList("select movie_id from sys_movie where movie_id = ? for update", movieId).isEmpty())
+            throw new DataNotFoundException("影片不存在");
+    }
+
+    private void refreshRating(Long movieId) {
+        Map<String, Object> stats = jdbc.queryForMap("select count(*) as total, coalesce(avg(score),0) as rating from sys_movie_comment where movie_id = ?", movieId);
+        jdbc.update("update sys_movie set movie_rate_num = ?, movie_score = ? where movie_id = ?", stats.get("total"), stats.get("rating"), movieId);
+    }
 }

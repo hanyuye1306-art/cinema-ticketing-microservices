@@ -77,10 +77,11 @@ export default {
     }
   },
   created() {
-    const userPicture = JSON.parse(window.sessionStorage.getItem('loginUser')).userPicture
-    const picture = JSON.parse(userPicture)
-    if(picture === null || picture.length === 0) return;
-    this.url = this.global.base + picture[0]
+    this.updateProfileAvatar(JSON.parse(window.sessionStorage.getItem('loginUser')))
+    this.$root.$on('user-profile-updated', this.updateProfileAvatar)
+  },
+  beforeDestroy() {
+    this.$root.$off('user-profile-updated', this.updateProfileAvatar)
   },
   watch: {
     '$route'() {
@@ -88,6 +89,11 @@ export default {
     }
   },
   methods: {
+    updateProfileAvatar(user) {
+      let pictures = []
+      try { pictures = JSON.parse(user && user.userPicture || '[]') } catch (error) { /* Empty avatar fallback. */ }
+      this.url = Array.isArray(pictures) && pictures[0] ? this.global.base + pictures[0] : ''
+    },
     handleSelect(key, keyPath){
       console.log(key, keyPath);
     },

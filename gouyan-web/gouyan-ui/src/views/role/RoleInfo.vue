@@ -118,8 +118,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "RoleInfo",
+
   data() {
     return {
       queryInfo: {
@@ -145,12 +147,16 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        roleName: [
-          {required: true, message: '请输入角色名', trigger: 'blur'}
-        ],
-        roleDesc: [
-          {required: true, message: '请输入角色描述', trigger: 'blur'}
-        ]
+        roleName: [{
+          required: true,
+          message: '请输入角色名',
+          trigger: 'blur'
+        }],
+        roleDesc: [{
+          required: true,
+          message: '请输入角色描述',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {
@@ -159,185 +165,234 @@ export default {
         roleDesc: ''
       },
       editFormRules: {
-        roleName: [
-          {required: true, message: '请输入角色名', trigger: 'blur'}
-        ],
-        roleDesc: [
-          {required: true, message: '请输入角色描述', trigger: 'blur'}
-        ]
+        roleName: [{
+          required: true,
+          message: '请输入角色名',
+          trigger: 'blur'
+        }],
+        roleDesc: [{
+          required: true,
+          message: '请输入角色描述',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: [],
       //分配权限对话框的显示与隐藏
       setRightDialogVisible: false,
       //当前分配权限的id
       roleId: ''
-    }
+    };
   },
+
   created() {
-    this.getRoleList()
+    this.getRoleList();
   },
+
   methods: {
     async getRoleList() {
-      const {data: res} = await axios.get('sysRole', {params: this.queryInfo})
-      this.rolelist = res.data;
-      this.total = res.total
-      this.queryInfo.pageNum = res.pageNum
-      this.queryInfo.pageSize = res.pageSize
+      return runRead(this, async () => {
+        const {
+          data: res
+        } = await checkedRequest(axios.get('sysRole', {
+          params: this.queryInfo
+        }));
+        this.rolelist = res.data;
+        this.total = res.total;
+        this.queryInfo.pageNum = res.pageNum;
+        this.queryInfo.pageSize = res.pageSize;
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getRoleList()
+      this.queryInfo.pageSize = newSize;
+      this.getRoleList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getRoleList()
+      this.queryInfo.pageNum = newPage;
+      this.getRoleList();
     },
+
     // 监听添加对话框的关闭事件
     addDialogClosed() {
-      this.$refs.addFormRef.resetFields()
+      this.$refs.addFormRef.resetFields();
     },
-    // 监听添加按钮
-    addRole() {
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        if (!valid) return
-        //预校验成功，发网络请求
 
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        const {data: res} = await axios.post('sysRole', JSON.stringify(_this.addForm))
-        if (res.code !== 200) return this.$message.error(res.msg)
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getRoleList()
-        this.$message.success('添加角色信息成功！')
-      })
+    // 监听添加按钮
+    async addRole() {
+      return runMutation(this, "addRole", async () => {
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.post('sysRole', JSON.stringify(_this.addForm)));
+        if (res.code !== 200) return this.$message.error(res.msg); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getRoleList();
+        this.$message.success('添加角色信息成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
     async showEditDialog(id) {
-      const _this = this
-      await axios.get('sysRole/' + id).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      this.editDialogVisible = true
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysRole/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
     editDialogClosed() {
-      this.$refs.editFormRef.resetFields()
+      this.$refs.editFormRef.resetFields();
     },
-    // 修改角色信息并提交
-    editRole() {
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        const {data: res} = await axios.put('sysRole/', JSON.stringify(_this.editForm))
-        if (res.code !== 200) return this.$message.error(res.msg)
 
-        this.editDialogVisible = false
-        await this.getRoleList()
-        this.$message.success('修改角色信息成功！')
-      })
+    // 修改角色信息并提交
+    async editRole() {
+      return runMutation(this, "editRole", async () => {
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.put('sysRole/', JSON.stringify(_this.editForm)));
+        if (res.code !== 200) return this.$message.error(res.msg);
+        this.editDialogVisible = false;
+        await this.getRoleList();
+        this.$message.success('修改角色信息成功！');
+      });
     },
+
     // 监听多选框变化
     handleSelectionChange(val) {
-      this.multipleSelection = val
+      this.multipleSelection = val;
     },
+
     async multipleDelete() {
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
-
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel') {
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.roleId)
-      })
-      let success = true
-      await axios.delete('sysRole/' + ids).then(resp => {
-        if (resp.data.code !== 200) {
-          success = false;
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      if (!success) return this.$message.error('批量删除资源信息失败！')
-      this.getRoleList()
-      this.$message.success('批量删除资源信息成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.roleId);
+        });
+        let success = true;
+        await checkedRequest(axios.delete('sysRole/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            success = false;
+          }
+        });
+        if (!success) return this.$message.error('批量删除资源信息失败！');
+        this.getRoleList();
+        this.$message.success('批量删除资源信息成功！');
+      });
     },
+
     //根据id删除对应的资源信息
     async deleteRoleById(roleId) {
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+      return runMutation(this, "deleteRoleById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel') {
-        return _this.$message.info('已取消删除')
-      }
 
-      let success = true
-      await axios.delete('sysRole/' + roleId).then(resp => {
-        if (resp.data.code !== 200) {
-          success = false
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      if (!success) return _this.$message.error('删除角色信息失败！')
-      this.getRoleList()
-      this.$message.success('删除角色信息成功！')
+
+        let success = true;
+        await checkedRequest(axios.delete('sysRole/' + roleId)).then(resp => {
+          if (resp.data.code !== 200) {
+            success = false;
+          }
+        });
+        if (!success) return _this.$message.error('删除角色信息失败！');
+        this.getRoleList();
+        this.$message.success('删除角色信息成功！');
+      });
     },
+
     //展示分配权限对话框
     async showSetRightDialog(role) {
-      this.roleId = role.roleId
-      const {data: res} = await axios.get('sysResource/tree')
-      this.resourcelist = res.data
-      console.log(role)
-      await this.getLeafKeys(role, this.defKeys)
-      console.log('defKeys' + this.defKeys)
-      this.setRightDialogVisible = true
+      this.roleId = role.roleId;
+      const {
+        data: res
+      } = await axios.get('sysResource/tree');
+      this.resourcelist = res.data;
+      await this.getLeafKeys(role, this.defKeys);
+      this.setRightDialogVisible = true;
     },
+
     //获取角色对应的所有具体权限id
     getLeafKeys(node, arr) {
-      if(!node) return
-      if (!node.children) {
-        return arr.push(node.id)
+      if (!node) return;
+
+      if (!Array.isArray(node.children) || node.children.length === 0) {
+        return arr.push(node.id);
       }
 
-      node.children.forEach(item => this.getLeafKeys(item, arr))
+      node.children.forEach(item => this.getLeafKeys(item, arr));
     },
+
     //关闭分配权限对话框，刷新defKeys
     setRightDialogClosed() {
-      this.defKeys = []
+      this.defKeys = [];
     },
-    async submitRights() {
-      const keys = [
-          ...this.$refs.treeRef.getCheckedKeys(true)
-      ]
-      const _this = this
-      axios.defaults.headers.post['Content-Type'] = 'application/json'
-      const {data : res} = await axios.post('sysRole/' + _this.roleId, JSON.stringify(keys))
-      if(res.code != 200) return this.$message.error("更新权限失败！")
 
-      this.$message.success("更新权限成功！")
-      this.getRoleList()
-      this.setRightDialogVisible = false
+    async submitRights() {
+      return runMutation(this, "submitRights", async () => {
+        const keys = [...this.$refs.treeRef.getCheckedKeys(true)];
+
+        const _this = this;
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        const {
+          data: res
+        } = await checkedRequest(axios.post('sysRole/' + _this.roleId, JSON.stringify(keys)));
+        if (res.code != 200) return this.$message.error("更新权限失败！");
+        this.$message.success("更新权限成功！");
+        this.getRoleList();
+        this.setRightDialogVisible = false;
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

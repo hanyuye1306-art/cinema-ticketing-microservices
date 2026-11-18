@@ -1,6 +1,7 @@
 package com.gouyan.system.mapper;
 
 import com.gouyan.system.domin.SysRole;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,9 +18,9 @@ public interface SysRoleMapper {
     int delete(Long id);
 
     //给当前角色分配权限
-    int addRight(Long roleId, Long resourceId);
+    int addRight(@Param("roleId") Long roleId, @Param("resourceId") Long resourceId);
 
-    int deleteRight(Long roleId, Long resourceId);
+    int deleteRight(@Param("roleId") Long roleId, @Param("resourceId") Long resourceId);
 
     //查询指定角色的所有三级权限id
     List<Long> findAllRights(Long roleId);

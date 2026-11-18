@@ -36,6 +36,15 @@ class BillPaymentServiceImplTest {
     }
 
     @Test
+    void paidBillCannotBeChangedBackToUnpaidWithoutRefund() {
+        when(billMapper.findByIdForUpdate(1L)).thenReturn(bill(1L, true, 10L, "[\"1排1号\"]"));
+        SysBillVo request = paymentRequest(1L, "{}");
+        request.getSysBill().setBillState(false);
+        assertThrows(DataNotFoundException.class, () -> paymentService.updateBill(request));
+        verify(billMapper, never()).update(any(SysBill.class));
+    }
+
+    @Test
     void missingSessionDoesNotMarkBillAsPaid() {
         SysBill persisted = bill(1L, false, 99L, "[\"1排1号\"]");
         when(billMapper.findByIdForUpdate(1L)).thenReturn(persisted);

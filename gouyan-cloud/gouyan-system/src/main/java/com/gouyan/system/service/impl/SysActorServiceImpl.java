@@ -7,10 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
 public class SysActorServiceImpl implements SysActorService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     private SysActorMapper sysActorMapper;
@@ -36,7 +40,9 @@ public class SysActorServiceImpl implements SysActorService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysActor", ids);
         int rows = 0;
         for (Long id : ids) {
             rows += sysActorMapper.delete(id);

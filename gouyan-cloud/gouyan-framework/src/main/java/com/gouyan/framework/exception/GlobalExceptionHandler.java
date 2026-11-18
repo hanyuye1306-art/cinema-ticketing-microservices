@@ -33,11 +33,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseResult methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e){
         //打印日志
-        log.error(e.getMessage(), e);
         //获取该异常的结果
         BindingResult bindingResult = e.getBindingResult();
         //获取错误msg
         String msg = bindingResult.getAllErrors().get(0).getDefaultMessage();
+        // Validation exceptions may contain rejected passwords or verification codes.
+        log.warn("请求参数校验失败: {}", msg);
         return ResponseResult.error(msg);
     }
 

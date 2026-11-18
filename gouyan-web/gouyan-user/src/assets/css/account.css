@@ -1,0 +1,11 @@
+.account-form .el-form-item { margin-bottom: 20px; }
+.account-form .el-form-item__label { line-height: 25px; padding-bottom: 5px; color: #555e6b; }
+.account-form .el-input__inner { height: 44px; border-radius: 7px; background: #fcfcfd; }
+.account-form .el-input__inner:focus { border-color: #df7775; }
+.account-submit.el-button { width: 100%; height: 44px; border-radius: 7px; background: #e64c4c; border-color: #e64c4c; color: #fff; }
+.account-submit.el-button:hover, .account-submit.el-button:focus { background: #d83d3d; border-color: #d83d3d; color: #fff; }
+.account-submit.el-button.is-disabled { background: #f3aaaa; border-color: #f3aaaa; }
+.account-links { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; font-size: 13px; color: #9097a2; }
+.account-links a, .account-inline-link { color: #df4c4c; text-decoration: none; }.account-links a:hover, .account-inline-link:hover { text-decoration: underline; }
+.account-help { margin: 6px 0 0; font-size: 12px; color: #969ca6; line-height: 1.6; }.account-error { margin-bottom: 18px; }.account-error .el-alert__content { min-width: 0; }
+.account-result { padding: 12px 0; text-align: center; }.account-result > i { color: #53ad7c; font-size: 52px; }.account-result h3 { margin: 18px 0 8px; }.account-result p { color: #818995; font-size: 13px; line-height: 1.8; margin-bottom: 24px; }

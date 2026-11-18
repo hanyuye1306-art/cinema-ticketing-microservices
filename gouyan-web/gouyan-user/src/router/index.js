@@ -4,6 +4,7 @@ import { Message }from 'element-ui'
 import Login from "../views/Login";
 import Welcome from "../views/Welcome";
 import Register from "../views/Register";
+import ForgotPassword from "../views/ForgotPassword";
 import Error404 from "../views/Error404";
 import Home from "../views/home/Home";
 import Movie from "../views/movie/Movie";
@@ -137,6 +138,9 @@ const routes = [
     path: '/register',
     component: Register
   },{
+    path: '/forgot-password',
+    component: ForgotPassword
+  },{
     path: '/*',
     component: Error404
   }
@@ -154,7 +158,7 @@ router.beforeEach((to, from, next) =>{
   //from 从哪个页面来
   //next 一个放行函数
 
-  if(to.path == '/login' || to.path == '/404' || to.path == '/register') return next();
+  if(['/login', '/404', '/register', '/forgot-password'].includes(to.path)) return next();
 
   //获取token
   const token = window.sessionStorage.getItem("token")

@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SysHallCategoryServiceImpl implements SysHallCategoryService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     private SysHallCategoryMapper sysHallCategoryMapper;
@@ -35,7 +39,9 @@ public class SysHallCategoryServiceImpl implements SysHallCategoryService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysHallCategory", ids);
         int rows = 0;
         for (Long id : ids) {
             rows += sysHallCategoryMapper.delete(id);

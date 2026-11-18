@@ -1,9 +1,9 @@
 <template>
-<div :class="mode=='pop'?'mask':''"  v-show="showBox">
+<div :class="mode=='pop'?'mask':''" v-show="showBox" :role="mode === 'pop' ? 'dialog' : null" :aria-modal="mode === 'pop' ? 'true' : null" aria-label="图形安全验证">
     <div :class="mode=='pop'?'verifybox':''" :style="{'max-width':parseInt(imgSize.width)+30+'px'}">
         <div class="verifybox-top"  v-if="mode=='pop'">
             请完成安全验证
-            <span class="verifybox-close" @click="closeBox">
+            <span class="verifybox-close" role="button" tabindex="0" aria-label="关闭图形验证" @click="closeBox" @keydown.enter="closeBox" @keydown.space.prevent="closeBox">
                 <i class="iconfont icon-close"></i>
             </span>
         </div>
@@ -126,6 +126,7 @@
             closeBox(){
                 this.clickShow = false
                 this.refresh();
+                this.$emit('close')
             },
             show(){
                 if (this.mode=="pop") {

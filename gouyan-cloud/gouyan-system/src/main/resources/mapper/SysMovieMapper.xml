@@ -125,7 +125,7 @@
             <if test=" movieIntroduction != null and movieIntroduction != ''">movie_introduction,</if>
             <if test=" releaseDate != null">release_date,</if>
             <if test=" movieScore != null and movieScore != 0">movie_score,</if>
-            <if test=" movieBoxOffice != null">movie_box_offcie,</if>
+            <if test=" movieBoxOffice != null">movie_box_office,</if>
             <if test=" movieRateNum != null and movieRateNum != 0">movie_rate_num,</if>
             <if test=" moviePictures != null and moviePictures != ''">movie_pictures,</if>
             movie_age_id

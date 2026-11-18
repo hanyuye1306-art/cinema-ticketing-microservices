@@ -1,5 +1,20 @@
 # Spring 配置
 spring:
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.starttls.required: ${SMTP_STARTTLS:true}
+      mail.smtp.ssl.enable: ${SMTP_SSL:false}
+      mail.smtp.ssl.checkserveridentity: true
+      mail.smtp.connectiontimeout: 3000
+      mail.smtp.timeout: 3000
+      mail.smtp.writetimeout: 3000
   # 数据源配置文件
   profiles:
     active: druid
@@ -30,6 +45,12 @@ spring:
       max-request-size: 50MB
   application:
     name: gouyan-auth
+
+# Account recovery mail is opt-in; credentials are supplied through environment variables.
+gouyan:
+  account:
+    mail-enabled: ${SMTP_ENABLED:false}
+    mail-from: ${SMTP_FROM:${SMTP_USERNAME:}}
 
 # Mybatis 配置
 mybatis:

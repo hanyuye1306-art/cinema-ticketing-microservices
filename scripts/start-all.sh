@@ -120,6 +120,11 @@ $ErrorActionPreference = "Stop"
 try {
     $errorFile = "$LogFile.stderr"
 
+    if ((Split-Path $WorkingDirectory -Leaf) -eq 'gouyan-auth') {
+        . (Join-Path (Split-Path $PSScriptRoot -Parent) 'scripts/mail-env.ps1')
+        Import-GouyanMailEnvironment -RuntimeDirectory $PSScriptRoot
+    }
+
     $process = Start-Process `
         -FilePath $Executable `
         -ArgumentList $Arguments `

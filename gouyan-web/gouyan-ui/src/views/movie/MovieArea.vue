@@ -87,8 +87,10 @@
 </template>
 
 <script>
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
 export default {
   name: "MovieArea",
+
   // this.$message和this.$confirm都属于原型挂载, 在element.js中配置
   // Vue.prototype.$message = Message
   // Vue.prototype.$confirm = MessageBox.confirm
@@ -109,156 +111,190 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        movieAreaName: [
-          { required: true, message: '请输入电影区域', trigger: 'blur' }
-        ]
+        movieAreaName: [{
+          required: true,
+          message: '请输入电影区域',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        movieAreaName: [
-          { required: true, message: '请输入电影区域', trigger: 'blur' }
-        ]
+        movieAreaName: [{
+          required: true,
+          message: '请输入电影区域',
+          trigger: 'blur'
+        }]
       },
       multipleSelection: []
-    }
+    };
   },
+
   created() {
-    this.getMovieAreaList()
+    this.getMovieAreaList();
   },
+
   methods: {
-    getMovieAreaList() {
-      const _this = this;
-      axios.get('sysMovieArea', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.moviearealist = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getMovieAreaList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieArea', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.moviearealist = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getMovieAreaList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getMovieAreaList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getMovieAreaList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getMovieAreaList();
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addMovieArea(){
-      const _this = this;
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        //预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysMovieArea/', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加电影区域失败！')
+    async addMovieArea() {
+      return runMutation(this, "addMovieArea", async () => {
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; //预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysMovieArea/', JSON.stringify(_this.addForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('添加电影区域失败！');
           }
-        })
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getMovieAreaList()
-        this.$message.success('添加电影区域成功！')
-      })
+        }); //隐藏添加对话框
+
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getMovieAreaList();
+        this.$message.success('添加电影区域成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    showEditDialog(id){
-      const _this = this
-      axios.get('sysMovieArea/' + id ).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieArea/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改电影分类信息并提交
-    editMovieAreaInfo(){
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('sysMovieArea/', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改电影区域失败！')
+    async editMovieAreaInfo() {
+      return runMutation(this, "editMovieAreaInfo", async () => {
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysMovieArea/', JSON.stringify(_this.editForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('修改电影区域失败！');
           }
-        })
-        this.editDialogVisible = false
-        this.getMovieAreaList()
-        this.$message.success('修改电影区域成功！')
-      })
+        });
+        this.editDialogVisible = false;
+        this.getMovieAreaList();
+        this.$message.success('修改电影区域成功！');
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.movieAreaId)
-      })
-      await axios.delete('sysMovieArea/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除电影区域失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getMovieAreaList()
-      this.$message.success('批量删除电影区域成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.movieAreaId);
+        });
+        await checkedRequest(axios.delete('sysMovieArea/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除电影区域失败！');
+          }
+        });
+        this.getMovieAreaList();
+        this.$message.success('批量删除电影区域成功！');
+      });
     },
+
     //根据id删除对应的电影分类
-    async deleteMovieAreaById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteMovieAreaById(id) {
+      return runMutation(this, "deleteMovieAreaById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysMovieArea/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除电影区域失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getMovieAreaList()
-      this.$message.success('删除电影区域成功！')
+
+        await checkedRequest(axios.delete('sysMovieArea/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除电影区域失败！');
+          }
+        });
+        this.getMovieAreaList();
+        this.$message.success('删除电影区域成功！');
+      });
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

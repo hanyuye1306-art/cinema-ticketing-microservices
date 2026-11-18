@@ -16,6 +16,8 @@ import java.util.List;
 
 @RestController
 public class SysHallController extends BaseController {
+    @Autowired
+    private com.gouyan.system.service.impl.AdminDeleteGuard adminDeleteGuard;
 
     @Autowired
     private SysHallServiceImpl sysHallService;
@@ -43,13 +45,19 @@ public class SysHallController extends BaseController {
     }
 
     @PutMapping("/sysHall")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public ResponseResult update(@Validated @RequestBody SysHall sysHall){
         //查出原有影厅信息
         SysHall orgHall = sysHallService.findByCinemaIdAndHallId(sysHall);
+        if (orgHall == null) throw new com.gouyan.common.exception.DataNotFoundException("影厅不存在");
+        boolean layoutChanged = !java.util.Objects.equals(sysHall.getRowNums(), orgHall.getRowNums())
+                || !java.util.Objects.equals(sysHall.getSeatNumsRow(), orgHall.getSeatNumsRow())
+                || !java.util.Objects.equals(sysHall.getRowStart(), orgHall.getRowStart());
+        if (layoutChanged) adminDeleteGuard.checkHallLayout(sysHall.getCinemaId(), sysHall.getHallId());
         int rows = sysHallService.update(sysHall);
         if(rows > 0){
             //修改成功
-            if(sysHall.getRowNums() != orgHall.getRowNums() || sysHall.getSeatNumsRow() != orgHall.getSeatNumsRow() || sysHall.getSeatNums() != orgHall.getSeatNums()) {
+            if(layoutChanged) {
                 //同步更新对应场次的座位
                 SysSessionVo sysSessionVo = new SysSessionVo();
                 sysSessionVo.setCinemaId(sysHall.getCinemaId());

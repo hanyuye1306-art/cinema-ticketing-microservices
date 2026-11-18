@@ -275,7 +275,8 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
   data() {
     return {
@@ -308,40 +309,60 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        cinemaName: [
-          { required: true, message: '请输入影院名称', trigger: 'change' }
-        ],
-        cinemaBrandId: [
-          { required: true, message: '请选择影院品牌', trigger: 'change' }
-        ],
-        cinemaAreaId: [
-          { required: true, message: '请选择影院区域', trigger: 'blur' }
-        ],
-        cinemaAddress: [
-          { required: true, message: '请输入影院地址', trigger: 'change' }
-        ],
-        entryDate: [
-          { required: true, message: '请选择场次日期', trigger: 'blur' }
-        ]
+        cinemaName: [{
+          required: true,
+          message: '请输入影院名称',
+          trigger: 'change'
+        }],
+        cinemaBrandId: [{
+          required: true,
+          message: '请选择影院品牌',
+          trigger: 'change'
+        }],
+        cinemaAreaId: [{
+          required: true,
+          message: '请选择影院区域',
+          trigger: 'blur'
+        }],
+        cinemaAddress: [{
+          required: true,
+          message: '请输入影院地址',
+          trigger: 'change'
+        }],
+        entryDate: [{
+          required: true,
+          message: '请选择场次日期',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        cinemaName: [
-          { required: true, message: '请输入影院名称', trigger: 'change' }
-        ],
-        cinemaBrandId: [
-          { required: true, message: '请选择影院品牌', trigger: 'change' }
-        ],
-        cinemaAreaId: [
-          { required: true, message: '请选择影院区域', trigger: 'blur' }
-        ],
-        cinemaAddress: [
-          { required: true, message: '请输入影院地址', trigger: 'change' }
-        ],
-        entryDate: [
-          { required: true, message: '请选择场次日期', trigger: 'blur' }
-        ]
+        cinemaName: [{
+          required: true,
+          message: '请输入影院名称',
+          trigger: 'change'
+        }],
+        cinemaBrandId: [{
+          required: true,
+          message: '请选择影院品牌',
+          trigger: 'change'
+        }],
+        cinemaAreaId: [{
+          required: true,
+          message: '请选择影院区域',
+          trigger: 'blur'
+        }],
+        cinemaAddress: [{
+          required: true,
+          message: '请输入影院地址',
+          trigger: 'change'
+        }],
+        entryDate: [{
+          required: true,
+          message: '请选择场次日期',
+          trigger: 'blur'
+        }]
       },
       inputCinemaName: '',
       inputCinemaAddress: '',
@@ -349,36 +370,29 @@ export default {
       selectedCinemaAreaId: '',
       selectedTicketState: '',
       selectedRefundState: '',
-
       cinemaBrandList: [],
       cinemaAreaList: [],
       userList: [],
-
-      state1: [
-        {
-          id: 0,
-          name: '不可改签'
-        },
-        {
-          id: 1,
-          name: '可改签'
-        }
-      ],
-      state2: [
-        {
-          id: 0,
-          name: '不可退款'
-        },
-        {
-          id: 1,
-          name: '可退款'
-        }
-      ],
+      state1: [{
+        id: 0,
+        name: '不可改签'
+      }, {
+        id: 1,
+        name: '可改签'
+      }],
+      state2: [{
+        id: 0,
+        name: '不可退款'
+      }, {
+        id: 1,
+        name: '可退款'
+      }],
       multipleSelection: [],
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() > Date.now();
         }
+
       },
       dialogImageUrl: '',
       dialogVisible: false,
@@ -389,262 +403,302 @@ export default {
       pictureList: [],
       picNums: 0,
       deletePicList: []
-    }
+    };
   },
+
   created() {
-    this.getCinemaList()
-    this.getCinemaBrandList()
-    this.getCinemaAreaList()
-    this.getUserList()
+    this.getCinemaList();
+    this.getCinemaBrandList();
+    this.getCinemaAreaList();
+    this.getUserList();
   },
+
   methods: {
-    getCinemaList() {
-      this.queryInfo.cinemaName = this.inputCinemaName
-      this.queryInfo.cinemaAddress = this.inputCinemaAddress
-      this.queryInfo.cinemaBrandId = this.selectedCinemaBrandId
-      this.queryInfo.cinemaAreaId = this.selectedCinemaAreaId
-      this.queryInfo.isTicketChanged = this.selectedTicketState
-      this.queryInfo.isRefunded = this.selectedRefundState
-      const _this = this;
-      axios.get('sysCinema', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.cinemaList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getCinemaList() {
+      return runRead(this, async () => {
+        this.queryInfo.cinemaName = this.inputCinemaName;
+        this.queryInfo.cinemaAddress = this.inputCinemaAddress;
+        this.queryInfo.cinemaBrandId = this.selectedCinemaBrandId;
+        this.queryInfo.cinemaAreaId = this.selectedCinemaAreaId;
+        this.queryInfo.isTicketChanged = this.selectedTicketState;
+        this.queryInfo.isRefunded = this.selectedRefundState;
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinema', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.cinemaList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getCinemaList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getCinemaList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getCinemaList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getCinemaList();
     },
-    showAddDialog(){
-      this.addDialogVisible = true
+
+    showAddDialog() {
+      this.addDialogVisible = true;
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
-      this.$refs.pictureRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
+      this.$refs.pictureRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
     },
+
     // 监听添加按钮
-    async addCinema(){
-      await this.submitFile()
-      console.log(this.pictureList)
-      this.addForm.cinemaPicture = JSON.stringify(this.pictureList)
+    async addCinema() {
+      return runMutation(this, "addCinema", async () => {
+        await this.submitFile();
+        this.addForm.cinemaPicture = JSON.stringify(this.pictureList);
 
-      const _this = this
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-        // 预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysCinema', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加影院信息失败！')
+        const _this = this;
+
+        const _valid = await validateForm(this.$refs.addFormRef);
+
+        if (!_valid) return; // 预校验成功，发网络请求
+
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        await checkedRequest(axios.post('sysCinema', JSON.stringify(_this.addForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('添加影院信息失败！');
           }
-        })
+        }); //隐藏添加对话框
 
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getCinemaList()
-        this.$message.success('添加影院信息成功！')
-      })
+        this.addDialogVisible = false; //重新加载列表
+
+        this.getCinemaList();
+        this.$message.success('添加影院信息成功！');
+      });
     },
+
     // 显示修改对话框，回显数据
-    async showEditDialog(id){
-      const _this = this
-      await axios.get('sysCinema/' + id).then(resp => {
-        console.log(resp)
-        _this.editForm = resp.data.data
-      })
-      for (const item of JSON.parse(this.editForm.cinemaPicture)) {
-        let pic = {}
-        pic['name'] = ''
-        pic['url'] = this.global.base + item
-        this.pics.push(pic)
-      }
-      console.log("aaa")
-      console.log(this.pics)
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        this.pictureList = [];
+        this.deletePicList = [];
+        this.pics = [];
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinema/' + id)).then(resp => {
+          _this.editForm = resp.data.data;
+        });
+
+        for (const item of pictureArray(this.editForm.cinemaPicture)) {
+          let pic = {};
+          pic['name'] = '';
+          pic['url'] = this.global.base + item;
+          this.pics.push(pic);
+        }
+
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
-      this.$refs.pictureEditRef.clearFiles()
-      this.pics = []
-      this.pictureList = []
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
+      this.$refs.pictureEditRef.clearFiles();
+      this.pics = [];
+      this.pictureList = [];
     },
+
     // 取消修改
-    cancelEdit(){
-      this.editDialogVisible = false
-      this.deletePicList.splice(0, this.deletePicList.length)
-
+    cancelEdit() {
+      this.editDialogVisible = false;
+      this.deletePicList.splice(0, this.deletePicList.length);
     },
-    async editCinemaInfo(){
-      await this.submitFile()
-      this.editForm.cinemaPicture = JSON.stringify(this.pictureList)
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('/sysCinema', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改影院信息失败！')
-            success = false
+
+    async editCinemaInfo() {
+      return runMutation(this, "editCinemaInfo", async () => {
+        await this.submitFile();
+        this.editForm.cinemaPicture = JSON.stringify(this.pictureList);
+
+        const _valid2 = await validateForm(this.$refs.editFormRef);
+
+        const _this = this;
+
+        if (!_valid2) return;
+        let success = true;
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('/sysCinema', JSON.stringify(_this.editForm))).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error('修改影院信息失败！');
+            success = false;
           }
-        })
-        if (!success) return
-        this.editDialogVisible = false
-        this.getCinemaList()
-        this.$message.success('修改影院信息成功！')
-        for(let s of this.deletePicList){
-          await axios.get('/upload/delete?filePath=' + s.substring(s.indexOf('/images')))
+        });
+        if (!success) return;
+        this.editDialogVisible = false;
+        this.getCinemaList();
+        this.$message.success('修改影院信息成功！');
+
+        for (let s of this.deletePicList) {
+          try { await checkedRequest(axios.get('/upload/delete', {params:{filePath:s.substring(s.indexOf('/images'))}})); } catch(error) { this.$message.warning('资料已保存，旧图片清理失败'); }
         }
-      })
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.cinemaId)
-      })
-      console.log(ids)
-      await axios.delete('sysCinema/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除影院失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getCinemaList()
-      this.$message.success('批量删除影院成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.cinemaId);
+        });
+        await checkedRequest(axios.delete('sysCinema/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除影院失败！');
+          }
+        });
+        this.getCinemaList();
+        this.$message.success('批量删除影院成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteCinemaById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteCinemaById(id) {
+      return runMutation(this, "deleteCinemaById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysCinema/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除影院信息失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getCinemaList()
-      this.$message.success('删除影院信息成功！')
+
+        await checkedRequest(axios.delete('sysCinema/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除影院信息失败！');
+          }
+        });
+        this.getCinemaList();
+        this.$message.success('删除影院信息成功！');
+      });
     },
-    getCinemaBrandList(){
-      const _this = this
-      axios.get('sysCinemaBrand').then(resp => {
-        console.log(resp)
-        _this.cinemaBrandList = resp.data.data
-      })
+
+    async getCinemaBrandList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinemaBrand')).then(resp => {
+          console.log(resp);
+          _this.cinemaBrandList = resp.data.data;
+        });
+      });
     },
-    getCinemaAreaList(){
-      const _this = this
-      axios.get('sysCinemaArea').then(resp => {
-        console.log(resp)
-        _this.cinemaAreaList = resp.data.data
-      })
+
+    async getCinemaAreaList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinemaArea')).then(resp => {
+          console.log(resp);
+          _this.cinemaAreaList = resp.data.data;
+        });
+      });
     },
-    getUserList(){
-      const _this = this
-      axios.get('sysUser').then(resp => {
-        console.log(resp)
-        _this.userList = resp.data.data
-      })
+
+    async getUserList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysUser')).then(resp => {
+          console.log(resp);
+          _this.userList = resp.data.data;
+        });
+      });
     },
-    async stateChanged(cinemaInfo){
-      console.log(cinemaInfo)
-      const _this = this
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      await axios.put('sysCinema', JSON.stringify(cinemaInfo)).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.error('更新状态失败！')
-        }
-      })
-      this.getCinemaList()
-      this.$message.success('更新状态成功！')
+
+    async stateChanged(cinemaInfo) {
+      return runMutation(this, "stateChanged", async () => {
+        const _this = this;
+
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysCinema', JSON.stringify(cinemaInfo))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.error('更新状态失败！');
+          }
+        });
+        this.getCinemaList();
+        this.$message.success('更新状态成功！');
+      }, () => this.getCinemaList());
     },
+
     handleRemove(file, fileList) {
-      const filePath = file.url
-      console.log(filePath)
-      const idx = this.pics.findIndex(x => x.url === filePath)
-      if(file.status === 'success'){
-        this.deletePicList.push(file.url)
+      const filePath = file.url;
+      const idx = this.pics.findIndex(x => x.url === filePath);
+
+      if (file.status === 'success') {
+        this.deletePicList.push(file.url);
       }
-      this.pics.splice(idx, 1)
+
+      this.pics.splice(idx, 1);
     },
+
     handlePictureCardPreview(file) {
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
-    handleChange(file, filelist){
-      this.pics = filelist.slice(0)
+
+    handleChange(file, filelist) {
+      this.pics = filelist.slice(0);
     },
-    handleSuccess(response){
-      this.pictureList.push(response.data)
-      this.addForm = JSON.stringify(this.pictureList)
-      this.editForm = JSON.stringify(this.pictureList)
+
+    handleSuccess(response) {
+      this.pictureList.push(response.data);
     },
-    handleError(err){
-      console.log(err)
-    },
-    async submitFile(){
-      const _this = this
-      for (let i = 0; i < this.pics.length; i++){
-        let formData = new FormData()
-        if (this.pics[i].status === 'success') {
-          let s = this.pics[i].url
-          this.pictureList.push(s.substring(s.indexOf('/images')))
-          continue
-        }
-        let file = this.pics[i].raw
-        formData.append('file', file)
-        await axios.post('upload/cinema', formData).then(response =>{
-          _this.pictureList.push(response.data.data)
-        })
-      }
+
+    handleError(err) {},
+
+    async submitFile() {
+      this.pictureList = await uploadPictures(this, this.pics, "cinema");
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

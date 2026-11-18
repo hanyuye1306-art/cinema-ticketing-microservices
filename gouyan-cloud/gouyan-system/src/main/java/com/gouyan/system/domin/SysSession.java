@@ -58,7 +58,7 @@ public class SysSession implements Serializable {
 
     //场次票价
     @NotNull(message = "场次票价不能为空")
-    @Size(min = 0, message = "场次票价不能为负数")
+    @javax.validation.constraints.DecimalMin(value = "0", message = "场次票价不能为负数")
     private Double sessionPrice;
 
     //场次提示

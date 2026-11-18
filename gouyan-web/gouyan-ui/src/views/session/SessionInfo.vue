@@ -116,7 +116,7 @@
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="150px">
         <!--prop：在addFormRules中定义校验规则， v-model：双向绑定数据-->
         <el-form-item label="影院名称" prop="cinemaId">
-          <el-input v-model="curCinemaName" disabled></el-input>
+          <el-select v-if="isSystemAdmin" v-model="addForm.cinemaId" placeholder="请选择影院" @change="addForm.hallId = ''; getHallList(addForm.cinemaId)"><el-option v-for="cinema in cinemaList" :key="cinema.cinemaId" :label="cinema.cinemaName" :value="cinema.cinemaId" /></el-select><el-input v-else v-model="curCinemaName" disabled></el-input>
         </el-form-item>
         <el-form-item label="影厅名称" prop="hallId">
           <el-select v-model="addForm.hallId" placeholder="请选择影厅名称" clearable >
@@ -257,9 +257,17 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
+  computed: {
+    isSystemAdmin() {
+      return window.sessionStorage.getItem("btnPermission") === "admin";
+    }
+
+  },
   name: "HallInfo",
+
   data() {
     return {
       queryInfo: {
@@ -291,46 +299,80 @@ export default {
       },
       //验证表单规则对象
       addFormRules: {
-        hallId: [
-          { required: true, message: '请选择影厅名称', trigger: 'change' }
-        ],
-        languageVersion: [
-          { required: true, message: '请输入电影语言', trigger: 'blur' }
-        ],
-        movieId: [
-          { required: true, message: '请选择电影名称', trigger: 'change' }
-        ],
-        movieRuntimeId: [
-          { required: true, message: '请选择播放时段', trigger: 'change' }
-        ],
-        sessionDate: [
-          { required: true, message: '请选择场次日期', trigger: 'blur' }
-        ],
-        sessionPrice: [
-          { required: true, message: '请输入场次价格', trigger: 'blur' }
-        ]
+        cinemaId: [{
+          required: true,
+          message: "请选择影院",
+          trigger: "change"
+        }],
+        hallId: [{
+          required: true,
+          message: '请选择影厅名称',
+          trigger: 'change'
+        }],
+        languageVersion: [{
+          required: true,
+          message: '请输入电影语言',
+          trigger: 'blur'
+        }],
+        movieId: [{
+          required: true,
+          message: '请选择电影名称',
+          trigger: 'change'
+        }],
+        movieRuntimeId: [{
+          required: true,
+          message: '请选择播放时段',
+          trigger: 'change'
+        }],
+        sessionDate: [{
+          required: true,
+          message: '请选择场次日期',
+          trigger: 'blur'
+        }],
+        sessionPrice: [{
+          required: true,
+          message: '请输入场次价格',
+          trigger: 'blur'
+        }]
       },
       editDialogVisible: false,
       editForm: {},
       editFormRules: {
-        hallId: [
-          { required: true, message: '请选择影厅名称', trigger: 'change' }
-        ],
-        languageVersion: [
-          { required: true, message: '请输入电影语言', trigger: 'blur' }
-        ],
-        movieId: [
-          { required: true, message: '请选择电影名称', trigger: 'change' }
-        ],
-        movieRuntimeId: [
-          { required: true, message: '请选择播放时段', trigger: 'change' }
-        ],
-        sessionDate: [
-          { required: true, message: '请选择场次日期', trigger: 'blur' }
-        ],
-        sessionPrice: [
-          { required: true, message: '请输入场次价格', trigger: 'blur' }
-        ]
+        cinemaId: [{
+          required: true,
+          message: "请选择影院",
+          trigger: "change"
+        }],
+        hallId: [{
+          required: true,
+          message: '请选择影厅名称',
+          trigger: 'change'
+        }],
+        languageVersion: [{
+          required: true,
+          message: '请输入电影语言',
+          trigger: 'blur'
+        }],
+        movieId: [{
+          required: true,
+          message: '请选择电影名称',
+          trigger: 'change'
+        }],
+        movieRuntimeId: [{
+          required: true,
+          message: '请选择播放时段',
+          trigger: 'change'
+        }],
+        sessionDate: [{
+          required: true,
+          message: '请选择场次日期',
+          trigger: 'blur'
+        }],
+        sessionPrice: [{
+          required: true,
+          message: '请输入场次价格',
+          trigger: 'blur'
+        }]
       },
       selectedCinemaId: '',
       selectedMovieId: '',
@@ -340,16 +382,13 @@ export default {
       hallList: [],
       movieList: [],
       movieRuntimeList: [],
-      states: [
-        {
-          id: 0,
-          name: '已下架'
-        },
-        {
-          id: 1,
-          name: '上映中'
-        }
-      ],
+      states: [{
+        id: 0,
+        name: '已下架'
+      }, {
+        id: 1,
+        name: '上映中'
+      }],
       multipleSelection: [],
       checkDialogVisible: false,
       seats: {},
@@ -365,264 +404,299 @@ export default {
         disabledDate(time) {
           return time.getTime() > Date.now();
         }
+
       },
       rowNums: '',
       colNums: '',
       rowStart: '',
       curCinemaName: '',
       loginUser: JSON.parse(window.sessionStorage.getItem('loginUser'))
-    }
+    };
   },
+
   created() {
-    this.getSessionList()
-    this.getHallList()
-    this.getCinemaList()
-    this.getMovieList()
-    this.getMovieRuntimeList()
-    this.curCinemaName = this.loginUser.cinemaName
+    this.getSessionList();
+    this.getHallList();
+    this.getCinemaList();
+    this.getMovieList();
+    this.getMovieRuntimeList();
+    this.curCinemaName = this.loginUser.cinemaName;
   },
+
   methods: {
-    getSessionList() {
-      this.queryInfo.cinemaId = this.selectedCinemaId
-      //非系统管理员只能查看自己影院的场次信息
-      if(window.sessionStorage.getItem("btnPermission") === 'normal'){
-        this.queryInfo.cinemaId = JSON.parse(window.sessionStorage.getItem('loginUser')).cinemaId
-      }
-      this.queryInfo.movieId = this.selectedMovieId
-      this.queryInfo.movieRuntimeId = this.selectedMovieRuntimeId
-      this.queryInfo.sessionDate = this.selectedDate
-      console.log(String(this.selectedDate))
-      const _this = this;
-      axios.get('sysSession', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.sessionList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getSessionList() {
+      return runRead(this, async () => {
+        this.queryInfo.cinemaId = this.selectedCinemaId; //非系统管理员只能查看自己影院的场次信息
+
+        if (window.sessionStorage.getItem("btnPermission") === 'normal') {
+          this.queryInfo.cinemaId = JSON.parse(window.sessionStorage.getItem('loginUser')).cinemaId;
+        }
+
+        this.queryInfo.movieId = this.selectedMovieId;
+        this.queryInfo.movieRuntimeId = this.selectedMovieRuntimeId;
+        this.queryInfo.sessionDate = this.selectedDate;
+        console.log(String(this.selectedDate));
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysSession', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.sessionList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getSessionList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getSessionList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getSessionList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getSessionList();
     },
-    showAddDialog(){
-      // 有 bug
-      // 如何选择完影院后 同步更新影厅信息呢
-      this.addDialogVisible = true
+
+    showAddDialog() {
+      if (window.sessionStorage.getItem("btnPermission") !== "admin") this.addForm.cinemaId = this.loginUser.cinemaId;
+      this.getHallList(this.addForm.cinemaId);
+      this.addDialogVisible = true;
     },
+
     // 监听添加对话框的关闭事件
-    addDialogClosed(){
-      this.$refs.addFormRef.resetFields()
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
     },
+
     // 监听添加按钮
-    addSession(){
-      const _this = this
-      this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
-        if (!valid) return
-
-        //验证通过，将登录用户的影院id赋值给表单
-        this.addForm.cinemaId = this.loginUser.cinemaId
-
-        let seats = ''
-        //查询影厅信息，查出对应排数和排座位数，填充sessionSeats字段
-        await axios.get('sysHall/' + this.addForm.cinemaId + '/' + this.addForm.hallId).then(resp => {
-          _this.rowNums = resp.data.data.rowNums
-          _this.colNums = resp.data.data.seatNumsRow
-          _this.rowStart = resp.data.data.rowStart
-          seats = resp.data.data.seatState
-        })
-
-        // let row = this.rowNums
-        // let col = this.colNums
-        // let seat = {}
-        // for (let i = 0; i < row; i++) {
-        //   let arr = []
-        //   for (let j = 0; j < col; j++) {
-        //     arr.push(0)
-        //   }
-        //   seat[isNaN(parseInt(_this.rowStart)) ? String.fromCharCode(i + _this.rowStart.charCodeAt(0)) : i + parseInt(_this.rowStart)] = arr
-        // }
-        // this.$set(this.addForm, 'sessionSeats', JSON.stringify(seat))
-        //新建场次时，将影厅的座位信息赋值给场次
-        this.$set(this.addForm, 'sessionSeats', seats)
-        console.log(_this.addForm.sessionSeats)
-
-        // 预校验成功，发网络请求
-        axios.defaults.headers.post['Content-Type'] = 'application/json'
-        await axios.post('sysSession', JSON.stringify(_this.addForm)).then(resp => {
-          console.log(resp)
-          if (resp.data.code !== 200){
-            this.$message.error('添加场次信息失败！')
+    async addSession() {
+      return runMutation(this, "addSession", async () => {
+        if (window.sessionStorage.getItem("btnPermission") !== "admin") this.addForm.cinemaId = this.loginUser.cinemaId;
+        if (!(await validateForm(this.$refs.addFormRef))) return;
+        const {
+          data
+        } = await checkedRequest(axios.get("sysHall/" + this.addForm.cinemaId + "/" + this.addForm.hallId));
+        if (!data.data) throw Error("所选影厅不存在");
+        const payload = { ...this.addForm,
+          sessionPrice: Number(this.addForm.sessionPrice),
+          sessionSeats: data.data.seatState,
+          seatNums: 0
+        };
+        await checkedRequest(axios.post("sysSession", payload, {
+          headers: {
+            "Content-Type": "application/json"
           }
-        })
-
-        //隐藏添加对话框
-        this.addDialogVisible = false
-        //重新加载列表
-        this.getSessionList()
-        this.$message.success('添加场次信息成功！')
-      })
+        }));
+        this.addDialogVisible = false;
+        this.getSessionList();
+        this.$message.success("添加场次成功");
+      });
     },
+
     // 显示修改对话框，回显数据
-    async showEditDialog(id){
-      const _this = this
-      const { data : res} = await axios.get('sysSession/' + id)
-      this.editForm = res.data
-      this.editDialogVisible = true
+    async showEditDialog(id) {
+      return runMutation(this, "showEditDialog", async () => {
+        const {
+          data
+        } = await checkedRequest(axios.get("sysSession/" + id));
+        this.editForm = data.data;
+        await this.getHallList(this.editForm.cinemaId);
+        this.editDialogVisible = true;
+      });
     },
+
     // 监听修改对话框的关闭事件
-    editDialogClosed(){
-      this.$refs.editFormRef.resetFields()
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
     },
+
     // 修改场次信息并提交
-    editSessionInfo(){
-      this.editForm.cinemaId = this.loginUser.cinemaId
-      let row = this.editForm.rowNums
-      let col = this.editForm.seatNumsRow
-      this.$set(this.editForm, 'seatNums', row * col)
-      let seat = {}
-      for (let i = 0; i < row; i++) {
-        let arr = []
-        for (let j = 0; j < col; j++) {
-          arr.push(0)
-        }
-        seat[isNaN(parseInt(this.editForm.rowStart)) ? String.fromCharCode(i + this.editForm.rowStart.charCodeAt(0)) : i + parseInt(this.editForm.rowStart)] = arr
-      }
-      this.$set(this.editForm, 'seatState', JSON.stringify(seat))
+    async editSessionInfo() {
+      return runMutation(this, "editSessionInfo", async () => {
+        if (!(await validateForm(this.$refs.editFormRef))) return;
+        const {
+          data
+        } = await checkedRequest(axios.get("sysSession/" + this.editForm.sessionId));
+        let seats = data.data.sessionSeats;
+        let count = data.data.seatNums;
 
-      this.$refs.editFormRef.validate(async valid => {
-        const _this = this
-        if (!valid) return
-        let success = true
-        axios.defaults.headers.put['Content-Type'] = 'application/json'
-        await axios.put('/sysSession', JSON.stringify(_this.editForm)).then(resp => {
-          if (resp.data.code !== 200){
-            this.$message.error('修改场次信息失败！')
-            success = false
+        if (data.data.hallId !== this.editForm.hallId) {
+          const hall = await checkedRequest(axios.get("sysHall/" + this.editForm.cinemaId + "/" + this.editForm.hallId));
+          seats = hall.data.data.seatState;
+          count = 0;
+        }
+
+        await checkedRequest(axios.put("sysSession", { ...this.editForm,
+          sessionPrice: Number(this.editForm.sessionPrice),
+          sessionSeats: seats,
+          seatNums: count
+        }, {
+          headers: {
+            "Content-Type": "application/json"
           }
-        })
-        if (!success) return
-        this.editDialogVisible = false
-        this.getSessionList()
-        this.$message.success('修改场次信息成功！')
-      })
+        }));
+        this.editDialogVisible = false;
+        this.getSessionList();
+        this.$message.success("修改场次成功");
+      });
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.sessionId)
-      })
-      console.log(ids)
-      await axios.delete('sysSession/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.success('批量删除场次失败！')
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-      })
-      this.getSessionList()
-      this.$message.success('批量删除场次成功！')
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.sessionId);
+        });
+        await checkedRequest(axios.delete('sysSession/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.success('批量删除场次失败！');
+          }
+        });
+        this.getSessionList();
+        this.$message.success('批量删除场次成功！');
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteSessionById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteSessionById(id) {
+      return runMutation(this, "deleteSessionById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysSession/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.success('删除场次信息失败！')
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-      })
-      this.getSessionList()
-      this.$message.success('删除场次信息成功！')
+
+        await checkedRequest(axios.delete('sysSession/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.success('删除场次信息失败！');
+          }
+        });
+        this.getSessionList();
+        this.$message.success('删除场次信息成功！');
+      });
     },
-    getCinemaList(){
-      const _this = this
-      axios.get('sysCinema').then(resp => {
-        _this.cinemaList = resp.data.data;
-      })
+
+    async getCinemaList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysCinema')).then(resp => {
+          _this.cinemaList = resp.data.data;
+        });
+      });
     },
-    getHallList(){
-      const _this = this
-      axios.get('sysHall?cinemaId=' + this.loginUser.cinemaId).then(resp => {
-        _this.hallList = resp.data.data;
-      })
-    },
-    getMovieList(){
-      const _this = this
-      axios.get('sysMovie').then(resp => {
-        _this.movieList = resp.data.data;
-      })
-    },
-    getMovieRuntimeList(){
-      const _this = this
-      axios.get('sysMovieRuntime').then(resp => {
-        console.log(resp)
-        _this.movieRuntimeList = resp.data.data
-      })
-    },
-    async sessionStateChanged(sessionInfo){
-      const _this = this
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      await axios.put('sysSession', JSON.stringify(sessionInfo)).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.error('更新场次状态失败！')
+
+    async getHallList(cinemaId) {
+      return runRead(this, async () => {
+        const id = cinemaId || (window.sessionStorage.getItem("btnPermission") === "admin" ? this.addForm.cinemaId : this.loginUser.cinemaId);
+
+        if (!id) {
+          this.hallList = [];
+          return;
         }
-      })
-      this.getSessionList()
-      this.$message.success('更新场次状态成功！')
+
+        const {
+          data
+        } = await checkedRequest(axios.get("sysHall", {
+          params: {
+            cinemaId: id
+          }
+        }));
+        if (data.code === 200) this.hallList = data.data;
+      });
     },
-    async checkSeat(id){
-      const _this = this
-      await axios.get('sysSession/' + id).then(resp => {
-        console.log(resp)
-        _this.seats = JSON.parse(resp.data.data.sessionSeats)
-        _this.col = resp.data.data.sysHall.seatNumsRow
-      })
-      console.log(this.col)
-      this.checkDialogWidth = 200 + this.col * 40 + 'px'
-      this.checkDialogVisible = true
+
+    async getMovieList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovie')).then(resp => {
+          _this.movieList = resp.data.data;
+        });
+      });
     },
-    isCinemaOwner(cinemaId){
-      return this.loginUser.cinemaId === cinemaId
+
+    async getMovieRuntimeList() {
+      return runRead(this, async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysMovieRuntime')).then(resp => {
+          console.log(resp);
+          _this.movieRuntimeList = resp.data.data;
+        });
+      });
+    },
+
+    async sessionStateChanged(sessionInfo) {
+      return runMutation(this, "sessionStateChanged", async () => {
+        const _this = this;
+
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('sysSession', JSON.stringify(sessionInfo))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.error('更新场次状态失败！');
+          }
+        });
+        this.getSessionList();
+        this.$message.success('更新场次状态成功！');
+      }, () => this.getSessionList());
+    },
+
+    async checkSeat(id) {
+      return runMutation(this, "checkSeat", async () => {
+        const _this = this;
+
+        await checkedRequest(axios.get('sysSession/' + id)).then(resp => {
+          _this.seats = JSON.parse(resp.data.data.sessionSeats);
+          _this.col = resp.data.data.sysHall.seatNumsRow;
+        });
+        this.checkDialogWidth = 200 + this.col * 40 + 'px';
+        this.checkDialogVisible = true;
+      });
+    },
+
+    isCinemaOwner(cinemaId) {
+      return window.sessionStorage.getItem("btnPermission") === "admin" || this.loginUser.cinemaId === cinemaId;
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

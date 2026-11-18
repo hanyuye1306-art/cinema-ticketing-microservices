@@ -77,9 +77,11 @@
 </template>
 
 <script>
-import global from "@/assets/css/global.css"
+import { checkedRequest, validateForm, runMutation, pictureArray, uploadPictures, runRead } from "@/utils/adminCrud";
+import global from "@/assets/css/global.css";
 export default {
   name: "billInfo",
+
   data() {
     return {
       queryInfo: {
@@ -93,115 +95,141 @@ export default {
       multipleSelection: [],
       selectedState: '',
       selectedDate: '',
-      states: [
-        {
-          id: 0,
-          name: '未支付'
-        },
-        {
-          id: 1,
-          name: '已完成'
-        }
-      ],
-    }
+      states: [{
+        id: 0,
+        name: '未支付'
+      }, {
+        id: 1,
+        name: '已完成'
+      }]
+    };
   },
+
   created() {
-    this.getBillList()
+    this.getBillList();
   },
+
   methods: {
-    getBillList() {
-      this.queryInfo.billState = this.selectedState
-      this.queryInfo.billDate = this.selectedDate
-      const _this = this;
-      axios.get('sysBill', {params: _this.queryInfo}).then(resp => {
-        console.log(resp)
-        _this.billList = resp.data.data;
-        _this.total = resp.data.total;
-        _this.queryInfo.pageSize = resp.data.pageSize;
-        _this.queryInfo.pageNum = resp.data.pageNum;
-      })
+    async getBillList() {
+      return runRead(this, async () => {
+        this.queryInfo.billState = this.selectedState;
+        this.queryInfo.billDate = this.selectedDate;
+
+        const _this = this;
+
+        await checkedRequest(axios.get('sysBill', {
+          params: _this.queryInfo
+        })).then(resp => {
+          console.log(resp);
+          _this.billList = resp.data.data;
+          _this.total = resp.data.total;
+          _this.queryInfo.pageSize = resp.data.pageSize;
+          _this.queryInfo.pageNum = resp.data.pageNum;
+        });
+      });
     },
+
     handleSizeChange(newSize) {
-      this.queryInfo.pageSize = newSize
-      this.getBillList()
-      console.log(newSize)
+      this.queryInfo.pageSize = newSize;
+      this.getBillList();
     },
+
     handleCurrentChange(newPage) {
-      this.queryInfo.pageNum = newPage
-      this.getBillList()
-      console.log(newPage)
+      this.queryInfo.pageNum = newPage;
+      this.getBillList();
     },
+
     // 监听多选框变化
-    handleSelectionChange(val){
-      this.multipleSelection = val
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
     },
-    async multipleDelete(){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
-
-      let ids = []
-      this.multipleSelection.forEach(data => {
-        ids.push(data.billId)
-      })
-      await axios.delete('sysBill/' + ids).then(resp => {
-        if (resp.data.code !== 200){
-          this.$message.error(resp.data.msg || '批量删除失败！')
-          return
+    async multipleDelete() {
+      return runMutation(this, "multipleDelete", async () => {
+        if (!this.multipleSelection || !this.multipleSelection.length) {
+          this.$message.warning('请先选择要删除的条目');
+          return;
         }
-        this.$message.success('批量删除成功！')
-      })
-      this.getBillList()
+
+        const _this = this; //询问用户是否确认删除
+
+
+        const resp = await this.$confirm('此操作将永久删除这些条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
+        }
+
+        let ids = [];
+        this.multipleSelection.forEach(data => {
+          ids.push(data.billId);
+        });
+        await checkedRequest(axios.delete('sysBill/' + ids)).then(resp => {
+          if (resp.data.code !== 200) {
+            this.$message.error(resp.data.msg || '批量删除失败！');
+            return;
+          }
+
+          this.$message.success('批量删除成功！');
+        });
+        this.getBillList();
+      });
     },
+
     //根据id删除对应的影厅分类
-    async deleteBillById(id){
-      const _this = this
-      //询问用户是否确认删除
-      const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch(err => err)
+    async deleteBillById(id) {
+      return runMutation(this, "deleteBillById", async () => {
+        const _this = this; //询问用户是否确认删除
 
-      // 用户确认删除, resp为字符串"confirm"
-      // 用户取消删除，resp为字符串"cancel"
-      console.log(resp)
-      if (resp == 'cancel'){
-        return _this.$message.info('已取消删除')
-      }
 
-      await axios.delete('sysBill/' + id).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.error(resp.data.msg || '删除订单失败！')
-          return
+        const resp = await this.$confirm('此操作将永久删除该条目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).catch(err => err); // 用户确认删除, resp为字符串"confirm"
+        // 用户取消删除，resp为字符串"cancel"
+
+        if (resp !== "confirm") {
+          return _this.$message.info('已取消删除');
         }
-        _this.$message.success('删除订单成功！')
-      })
-      this.getBillList()
+
+        await checkedRequest(axios.delete('sysBill/' + id)).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.error(resp.data.msg || '删除订单失败！');
+
+            return;
+          }
+
+          _this.$message.success('删除订单成功！');
+        });
+        this.getBillList();
+      });
     },
-    async billStateChanged(billInfo){
-      const _this = this
-      axios.defaults.headers.put['Content-Type'] = 'application/json'
-      await axios.put('/sysBill', JSON.stringify(billInfo)).then(resp => {
-        if (resp.data.code !== 200){
-          _this.$message.error('更新订单状态失败！')
-        }
-      })
-      this.getBillList()
-      this.$message.success('更新订单状态成功！')
+
+    async billStateChanged(billInfo) {
+      return runMutation(this, "billStateChanged", async () => {
+        const _this = this;
+
+        axios.defaults.headers.put['Content-Type'] = 'application/json';
+        await checkedRequest(axios.put('/sysBill', JSON.stringify({
+          sysBill: billInfo
+        }))).then(resp => {
+          if (resp.data.code !== 200) {
+            _this.$message.error('更新订单状态失败！');
+          }
+        });
+        this.getBillList();
+        this.$message.success('更新订单状态成功！');
+      }, () => this.getBillList());
     }
+
   }
-}
+};
 </script>
 
 <style scoped>

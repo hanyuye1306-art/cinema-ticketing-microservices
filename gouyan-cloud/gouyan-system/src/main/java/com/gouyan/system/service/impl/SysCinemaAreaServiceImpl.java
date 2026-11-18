@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SysCinemaAreaServiceImpl implements SysCinemaAreaService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     private SysCinemaAreaMapper sysCinemaAreaMapper;
@@ -35,7 +39,9 @@ public class SysCinemaAreaServiceImpl implements SysCinemaAreaService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysCinemaArea", ids);
         int rows = 0;
         for(Long id : ids){
             rows += sysCinemaAreaMapper.delete(id);

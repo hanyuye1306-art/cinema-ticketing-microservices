@@ -9,6 +9,8 @@ import lombok.ToString;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 
@@ -17,14 +19,19 @@ import java.io.Serializable;
 @Data
 @ToString
 public class SysUser implements Serializable {
+    public interface Create { }
+    public interface Update { }
     private final static Long serialVersionUID = 1L;
     //用户id
+    @NotNull(groups = Update.class, message = "缺少用户ID")
     private Long userId;
     //用户名
     @NotBlank(message = "用户名不能为空")
     private String userName;
     //密码
-    @NotBlank(message = "密码不能为空")
+    @NotBlank(groups = Create.class, message = "密码不能为空")
+    @Size(groups = Create.class, min = 6, max = 16, message = "密码长度为6到16个字符")
+    @Pattern(groups = Update.class, regexp = "(?s)(?:|(?=.{6,16}$).*\\S.*)", message = "新密码须为6到16个字符，留空则保持原密码")
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     //盐
@@ -34,7 +41,7 @@ public class SysUser implements Serializable {
     @Email(message = "邮箱格式有误")
     private String email;
     //电话号码
-    @Pattern(regexp = "^1[3|4|5|7|8]\\d{9}$", message = "电话号码格式有错")
+    @Pattern(regexp = "^(?:1[3-9]\\d{9})?$", message = "电话号码格式有错")
     private String phoneNumber;
     //性别
     private Boolean sex;

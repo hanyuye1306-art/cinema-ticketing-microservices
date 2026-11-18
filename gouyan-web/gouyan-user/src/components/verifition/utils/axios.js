@@ -25,6 +25,8 @@ service.interceptors.response.use(
     return res
   },
   error => {
+    // Keep the captcha component's response contract on network/HTTP failures.
+    return { repCode: 'SERVICE_UNAVAILABLE', repMsg: '图形验证服务暂不可用，请刷新重试' }
   }
 )
 export default service

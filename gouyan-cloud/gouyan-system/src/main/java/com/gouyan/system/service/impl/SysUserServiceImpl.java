@@ -13,9 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service("sysUserService")
 public class SysUserServiceImpl implements SysUserService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
@@ -62,17 +66,24 @@ public class SysUserServiceImpl implements SysUserService {
             throw new AuthenticationException("用户不存在");
         }
 
-        if(!originUser.getPassword().equals(sysUser.getPassword())){
-            //修改了密码
-            //重新处理密码存储
+        if (sysUser.getPassword() == null || sysUser.getPassword().isEmpty()) {
+            // Passwords are write-only in API responses; profile edits do not send one.
+            sysUser.setPassword(originUser.getPassword());
+            sysUser.setSalt(originUser.getSalt());
+        } else {
             sysUser.setPassword(PASSWORD_ENCODER.encode(sysUser.getPassword()));
             sysUser.setSalt(null);
+        }
+        if (sysUser.getSex() == null) {
+            sysUser.setSex(originUser.getSex());
         }
         return sysUserMapper.update(sysUser);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysUser", ids);
         int rows = 0;
         for (Long id : ids) {
             rows += sysUserMapper.delete(id);

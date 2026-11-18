@@ -43,6 +43,7 @@ public class SysMovie implements Serializable {
     private Long movieAgeId;
 
     //上映日期
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     private Date releaseDate;
 
     //电影评分

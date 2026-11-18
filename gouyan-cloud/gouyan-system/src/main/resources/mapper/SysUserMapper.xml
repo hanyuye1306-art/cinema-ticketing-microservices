@@ -69,13 +69,18 @@
         user_name = #{userName},
         password = #{password},
         salt = #{salt},
-        <if test="email != null and email != ''">email = #{email},</if>
-        <if test="phoneNumber != null and phoneNumber != ''">phone_number = #{phoneNumber}, </if>
+        <if test="email != null">email = #{email},</if>
+        <if test="phoneNumber != null">phone_number = #{phoneNumber}, </if>
         <if test="userPicture != null and userPicture != ''">user_picture = #{userPicture},</if>
         <if test="information != null and information != ''" >information = #{information},</if>
         <if test="roleId != null and roleId != 0">role_id = #{roleId}, </if>
         sex = #{sex}
         where user_id = #{userId}
+    </update>
+
+    <update id="resetPassword">
+        update sys_user set password = #{password}, salt = null
+        where user_id = #{userId} and email = #{email}
     </update>
 
     <update id="delete" parameterType="Long">

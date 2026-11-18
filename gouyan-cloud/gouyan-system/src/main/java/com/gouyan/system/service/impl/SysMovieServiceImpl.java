@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SysMovieServiceImpl implements SysMovieService {
+    @Autowired
+    private AdminDeleteGuard adminDeleteGuard;
+
 
     @Autowired
     private SysMovieMapper sysMovieMapper;
@@ -32,6 +36,9 @@ public class SysMovieServiceImpl implements SysMovieService {
 
     @Override
     public int add(SysMovie sysMovie) {
+        if (sysMovie.getMovieScore() == null) sysMovie.setMovieScore(0.0);
+        if (sysMovie.getMovieBoxOffice() == null) sysMovie.setMovieBoxOffice(0.0);
+        if (sysMovie.getMovieRateNum() == null) sysMovie.setMovieRateNum(0);
         return sysMovieMapper.add(sysMovie);
     }
 
@@ -41,7 +48,9 @@ public class SysMovieServiceImpl implements SysMovieService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Long[] ids) {
+        adminDeleteGuard.check("sysMovie", ids);
         int rows = 0;
         for(Long id : ids){
             rows += sysMovieMapper.delete(id);
