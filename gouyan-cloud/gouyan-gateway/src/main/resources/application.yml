@@ -91,9 +91,20 @@ hystrix:
             thread:
               timeoutInMilliseconds: 5000 #断路器超时时间，默认1000ms
 
-# 暴露监控端点
+# 暴露基础监控端点
 management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# 微服务基本信息
+info:
+  app:
+    name: ${spring.application.name}
+    description: API统一网关，负责微服务请求路由、转发与负载均衡
+    version: 0.0.1-SNAPSHOT
+    port: ${server.port}

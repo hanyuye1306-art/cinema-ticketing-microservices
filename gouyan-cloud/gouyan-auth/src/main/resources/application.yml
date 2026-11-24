@@ -97,3 +97,21 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 5000 #断路器超时时间，默认1000ms
+
+# 暴露基础监控端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# 微服务基本信息
+info:
+  app:
+    name: ${spring.application.name}
+    description: 用户登录、注册、密码找回、身份认证及权限管理
+    version: 0.0.1-SNAPSHOT
+    port: ${server.port}

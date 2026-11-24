@@ -47,6 +47,9 @@ public class ShiroConfig {
         map.put("/sysUser/password/reset", "anon");
         map.put("/images/**", "anon");//放行图片查询
         map.put("/captcha/**", "anon");//放行验证码请求
+        // 放行基础监控接口
+        map.put("/actuator/info", "anon");
+        map.put("/actuator/health", "anon");
         map.put("/**", "jwt");//请求这个资源需要认证与授权
 
         // 添加自己的过滤器并且取名为jwt
