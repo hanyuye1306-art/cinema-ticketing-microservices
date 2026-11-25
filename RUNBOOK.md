@@ -2,6 +2,8 @@
 
 ## 1. 环境与依赖
 
+本机 Windows 的版本、Git Bash 命令和答辩演练见 [现场答辩操作指导书](现场答辩操作指导书.md)。
+
 项目最近一次完整验证使用以下版本：
 
 - OpenJDK 11.0.32.1（源码目标版本为 Java 8，因此也支持兼容的 JDK 8）
@@ -13,7 +15,7 @@
 
 除 Java、Maven、MySQL、Node.js 和 npm 外，自动化脚本还需要：
 
-- `mysqladmin`：启动前检查 MySQL 状态
+- `mysql`：启动前验证数据库连接和电影表
 - `lsof`：检查端口并记录服务进程
 - `curl`：执行 HTTP 冒烟测试
 - `python3`：解析冒烟测试的 JSON 响应
@@ -54,17 +56,15 @@ mysql -uroot -p movie -e "SHOW TABLES;"
 前端首次安装依赖：
 
 ```bash
-cd gouyan-web/gouyan-user && npm install
-cd ../gouyan-ui && npm install
-cd ../../
+(cd gouyan-web/gouyan-user && npm ci)
+(cd gouyan-web/gouyan-ui && npm ci)
 ```
 
 后端测试和打包：
 
 ```bash
 cd gouyan-cloud
-mvn test
-mvn package
+mvn -B install
 cd ..
 ```
 
@@ -122,7 +122,7 @@ tail -f .runtime/bill.log
 ./scripts/stop-all.sh
 ```
 
-`stop-all.sh` 只停止启动脚本创建并记录 PID 的进程，不会停止脚本运行前已经存在的服务。
+`stop-all.sh` 会核对进程的项目归属；也可指定服务名，例如 `bash scripts/stop-all.sh bill movie-a`。
 
 验收地址：
 
@@ -140,29 +140,30 @@ Windows QQ 邮箱可在项目根目录运行 `powershell -NoProfile -File script
 
 正常模式启动后执行：
 
-启动脚本显示完成后，建议等待约 30 秒，让 Gateway 服务发现缓存完成首次刷新，再执行冒烟测试：
+启动脚本显示完成后，使用 `--wait` 等待注册表、网关登录路由和页面就绪。
 
 ```bash
-bash scripts/smoke-test.sh
+bash scripts/smoke-test.sh --wait
 ```
 
-请在项目根目录执行；Windows CMD 和 Git Bash 均可使用上述命令。脚本默认使用网站演示账号 `admin / 123456`，与 MySQL 的连接账号密码无关。若网站密码已修改，可以用 `GOUYAN_USERNAME`、`GOUYAN_PASSWORD` 覆盖；Windows CMD 示例：
+请在项目根目录执行。脚本默认使用初始化数据库的课程账号。本机管理员密码已修改时，在 Git Bash 设置当前会话变量。
 
-```cmd
-bash -c "GOUYAN_USERNAME=admin GOUYAN_PASSWORD=你的实际网站密码 bash scripts/smoke-test.sh"
+```bash
+read -rsp 'Website admin password: ' GOUYAN_PASSWORD; printf '\n'
+export GOUYAN_USERNAME=admin GOUYAN_PASSWORD
+bash scripts/smoke-test.sh --wait
 ```
 
 脚本会验证 Python 是否可用，并以 UTF-8 模式解析接口 JSON，避免 Windows 默认 GBK 编码导致中文订单数据解析失败。
 
 脚本验证登录、Gateway、电影和影院查询、MyBatis 查询、Bill 到 Movie 的 Feign 调用，以及 Ribbon 是否轮询到两个 Movie 实例。
 
-Hystrix 演示需要重新以演示模式启动：
+已有构建时，仅重启 Bill 和 Movie 9010 即可切换 Hystrix 演示模式。下列命令沿用已在当前 Git Bash 设置的数据库及网站账号变量。
 
 ```bash
-./scripts/stop-all.sh
-MYSQL_PASSWORD='你的本机数据库密码' ./scripts/start-all.sh --backend-only --hystrix-demo
-GOUYAN_USERNAME=admin GOUYAN_PASSWORD='课程演示账号密码' \
-  ./scripts/smoke-test.sh --expect-hystrix --backend-only
+bash scripts/stop-all.sh bill movie-a &&
+  bash scripts/start-all.sh --skip-build --hystrix-demo &&
+  bash scripts/smoke-test.sh --expect-hystrix --wait
 ```
 
 最后通过用户前台完成一次写链路验收：选择一个仍有空座的场次，创建订单并模拟支付；刷新订单确认状态为已支付，刷新场次确认座位已售出，并在管理后台确认电影票房只增加一次。对同一订单再次提交支付请求时，票房和座位数不应重复增加。
@@ -189,7 +190,7 @@ GOUYAN_USERNAME=admin GOUYAN_PASSWORD='课程演示账号密码' \
 
 ### 前端提示缺少 node_modules
 
-分别进入 `gouyan-web/gouyan-user` 和 `gouyan-web/gouyan-ui` 执行 `npm install`。Node 20 下启动脚本已自动设置 `NODE_OPTIONS=--openssl-legacy-provider`。
+分别进入 `gouyan-web/gouyan-user` 和 `gouyan-web/gouyan-ui` 执行 `npm ci`。前端使用锁定的 Webpack 4.47，Windows 实测使用 Node 18.13.0、npm 9.9.4。
 
 ### Feign、Ribbon 或 Hystrix 验证失败
 

@@ -1,0 +1,226 @@
+{
+  "info": {
+    "name": "狗眼电影 · 现场答辩",
+    "description": "本地演练接口。先登录，再运行 Gateway 电影列表，随后验证 Bill 查询；Hystrix 状态只在演示模式可用。电影 CRUD 通过管理后台按指导书执行。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 登录并保存 Token",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set(\"userNameJson\", JSON.stringify(pm.variables.get(\"username\")));",
+              "pm.variables.set(\"passwordJson\", JSON.stringify(pm.variables.get(\"password\") || \"\"));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.test(\"业务 code=200\", () => pm.expect(body.code).to.eql(200));",
+              "pm.collectionVariables.unset(\"token\");",
+              "pm.collectionVariables.unset(\"movieId\");",
+              "if (body.code === 200 && body.data.token) pm.collectionVariables.set(\"token\", body.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userName\": {{userNameJson}}, \"password\": {{passwordJson}}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/sysUser/login",
+        "description": "先在集合的 Variables 中填写本地 password。登录成功后自动更新 Token。"
+      }
+    },
+    {
+      "name": "Eureka 7001 · Movie 双实例",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const apps = pm.response.json().applications.application;",
+              "const movie = apps.find(app => app.name === \"GOUYAN-MOVIE\");",
+              "pm.test(\"Movie 9010/9011 UP\", () => {",
+              "  const ports = [].concat(movie.instance).filter(i => i.status === \"UP\").map(i => Number(i.port.$));",
+              "  pm.expect(ports).to.have.members([9010, 9011]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "http://127.0.0.1:7001/eureka/apps"
+      }
+    },
+    {
+      "name": "Eureka 7002 · Movie 双实例",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const apps = pm.response.json().applications.application;",
+              "const movie = apps.find(app => app.name === \"GOUYAN-MOVIE\");",
+              "pm.test(\"Movie 9010/9011 UP\", () => {",
+              "  const ports = [].concat(movie.instance).filter(i => i.status === \"UP\").map(i => Number(i.port.$));",
+              "  pm.expect(ports).to.have.members([9010, 9011]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "http://127.0.0.1:7002/eureka/apps"
+      }
+    },
+    {
+      "name": "02 Gateway 电影列表并保存 movieId",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.test(\"业务 code=200\", () => pm.expect(body.code).to.eql(200));",
+              "if (body.code === 200) {",
+              "  const rows = Array.isArray(body.data) ? body.data : body.data.rows;",
+              "  if (rows && rows.length) pm.collectionVariables.set(\"movieId\", rows[0].movieId);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{baseUrl}}/sysMovie?pageNum=1&pageSize=10"
+      }
+    },
+    {
+      "name": "03 Bill → Movie · Feign / Ribbon",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.test(\"收到电影响应或 Hystrix 降级\", () => {",
+              "  if (body.fallback) pm.expect(body.code).to.eql(503);",
+              "  else {",
+              "    pm.expect(body.code).to.eql(200);",
+              "    pm.expect(body.data.movieId).to.eql(Number(pm.collectionVariables.get(\"movieId\")));",
+              "    pm.expect(body.servedBy).to.match(/^gouyan-movie:901[01]$/);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{baseUrl}}/sysBill/movie/{{movieId}}",
+        "description": "正常模式连点六次，观察 servedBy 在 9010 与 9011 之间交替。Hystrix 模式观察 fallback、failureType、failureMessage。"
+      }
+    },
+    {
+      "name": "04 Hystrix 状态（仅演示模式）",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.test(\"业务 code=200\", () => pm.expect(body.code).to.eql(200));",
+              "pm.test(\"返回熔断状态\", () => pm.expect(body.state).to.be.oneOf([\"NOT_INITIALIZED\", \"OPEN\", \"CLOSED\"]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{baseUrl}}/sysBill/hystrix/movie"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8181"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "movieId",
+      "value": ""
+    }
+  ]
+}

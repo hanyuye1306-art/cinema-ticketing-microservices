@@ -1,58 +1,30 @@
 package com.example.gouyangateway.config;
 
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
-/**
- * @ProjectName: cloud-netflix
- * @Package: com.ruoyi.gateway.config
- * @Version: 1.0
- */
 @Configuration
 public class WebAjaxMvcConfigurer {
 
+    @Bean
+    public CorsWebFilter corsWebFilter(
+            @Value("${gouyan.cors.allowed-origins:http://127.0.0.1:8080,http://localhost:8080,http://127.0.0.1:8888,http://localhost:8888}")
+            String[] allowedOrigins) {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        cors.setAllowedMethods(Arrays.asList("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"));
+        cors.addAllowedHeader("*");
+        cors.setAllowCredentials(true);
+        cors.setMaxAge(3600L);
 
-        private List<String> sourceCors = Arrays.asList("http://localhost:5000");
-        private List<String> methods = Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS");
-
-        @Bean
-        public CorsWebFilter corsWebFilter() {
-            CorsConfiguration corsConfiguration = new CorsConfiguration();
-            // 放行原始域
-            if (CollectionUtils.isEmpty(sourceCors)) {
-                corsConfiguration.addAllowedOrigin("*"); // 放行所有
-            } else {
-                for (String sourceCor : sourceCors) {
-                    corsConfiguration.addAllowedOrigin(sourceCor);
-                }
-            }
-            // 放行请求头
-            if (CollectionUtils.isEmpty(methods)) {
-                corsConfiguration.addAllowedHeader("*"); // 放行所有
-            } else {
-                for (String method : methods) {
-                    corsConfiguration.addAllowedHeader(method);
-                }
-            }
-            corsConfiguration.addAllowedOrigin("*");
-            corsConfiguration.addAllowedMethod("*");
-            corsConfiguration.addAllowedHeader("*");
-            corsConfiguration.setAllowCredentials(true);
-
-            UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-
-            urlBasedCorsConfigurationSource.registerCorsConfiguration("/**",corsConfiguration);
-            return new CorsWebFilter(urlBasedCorsConfigurationSource);
-        }
-
-
-
+        UrlBasedCorsConfigurationSource routes = new UrlBasedCorsConfigurationSource();
+        routes.registerCorsConfiguration("/**", cors);
+        return new CorsWebFilter(routes);
+    }
 }

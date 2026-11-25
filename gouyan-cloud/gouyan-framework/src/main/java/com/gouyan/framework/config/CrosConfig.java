@@ -1,5 +1,6 @@
 package com.gouyan.framework.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -7,10 +8,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class CrosConfig implements WebMvcConfigurer {
+    private final String[] allowedOrigins;
+
+    public CrosConfig(@Value("${gouyan.cors.allowed-origins:http://127.0.0.1:8080,http://localhost:8080,http://127.0.0.1:8888,http://localhost:8888}")
+                      String[] allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:8080")
+                .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET","HEAD","POST","PUT","DELETE","OPTIONS")
                 .allowCredentials(true)
                 .maxAge(3600)

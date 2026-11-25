@@ -6,6 +6,27 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 RUNTIME_DIR="$PROJECT_ROOT/.runtime"
 SERVICES=(eureka-peer1 eureka-peer2 actor auth bill cinema hall movie-a movie-b admin gateway user-web admin-web)
 PORTS=(7001 7002 9000 9002 9004 9006 9009 9010 9011 8183 8181 8080 8888)
+if (( $# )); then
+  selected_services=()
+  selected_ports=()
+  for name in "$@"; do
+    found=false
+    for i in "${!SERVICES[@]}"; do
+      if [[ "$name" == "${SERVICES[$i]}" ]]; then
+        selected_services+=("$name")
+        selected_ports+=("${PORTS[$i]}")
+        found=true
+        break
+      fi
+    done
+    if [[ "$found" == false ]]; then
+      echo "[ERROR] Unknown service: $name" >&2
+      exit 1
+    fi
+  done
+  SERVICES=("${selected_services[@]}")
+  PORTS=("${selected_ports[@]}")
+fi
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*) OS_PLATFORM=windows ;;
   Darwin*) OS_PLATFORM=macos ;;
@@ -18,6 +39,8 @@ if [[ "$OS_PLATFORM" == windows ]]; then
   command -v powershell.exe >/dev/null
   command -v cygpath >/dev/null
   export STOP_PROJECT_ROOT="$(cygpath -w "$PROJECT_ROOT")"
+  export STOP_SERVICES="${SERVICES[*]}"
+  export STOP_PORTS="${PORTS[*]}"
   # Use environment variables rather than powershell -Command ... -Args.
   # Disable MSYS argument rewriting for native PowerShell.
   PS_TEMP="$(mktemp "${TMPDIR:-/tmp}/gouyan-stop.XXXXXXXX")"
@@ -29,9 +52,12 @@ if [[ "$OS_PLATFORM" == windows ]]; then
     $ErrorActionPreference = "Stop"
     $root = [IO.Path]::GetFullPath($env:STOP_PROJECT_ROOT).TrimEnd([char]92)
     $runtime = Join-Path $root ".runtime"
-    $services = [ordered]@{"eureka-peer1"=7001;"eureka-peer2"=7002;"actor"=9000;"auth"=9002;"bill"=9004;"cinema"=9006;"hall"=9009;"movie-a"=9010;"movie-b"=9011;"admin"=8183;"gateway"=8181;"user-web"=8080;"admin-web"=8888}
+    $services = [ordered]@{}
+    $names = $env:STOP_SERVICES.Split(' ')
+    $ports = $env:STOP_PORTS.Split(' ')
+    for ($i=0; $i -lt $names.Count; $i++) { $services[$names[$i]] = [int]$ports[$i] }
     function Get-Owners($port) {
-      @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object {$_.LocalPort -eq $port} | Select-Object -ExpandProperty OwningProcess -Unique)
+      @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
     }
     function Get-Proc($id) {
       if (-not $id -or $id -eq 0) { return $null }
@@ -51,7 +77,7 @@ if [[ "$OS_PLATFORM" == windows ]]; then
         '^eureka-' { 'gouyan-cloud\gouyan-eureka'; break }
         '^movie-' { 'gouyan-cloud\gouyan-movie'; break }
         '^user-web$' { 'gouyan-web\gouyan-user'; break }
-        '^admin-web$' { 'gouyan-web\gouyan-admin'; break }
+        '^admin-web$' { 'gouyan-web\gouyan-ui'; break }
         default { 'gouyan-cloud\gouyan-' + $name }
       }
       $expected = [regex]::Escape($root + '\' + $module) + '(?=\\|[\s;" ]|$)'
@@ -59,16 +85,22 @@ if [[ "$OS_PLATFORM" == windows ]]; then
     }
     # Discover launchers from verified live service processes, even if runtime records are missing.
     $launchers = @{}
+    $verified = @{}
     foreach ($service in $services.Keys) {
+      $starterRecord = Join-Path $runtime ($service + ".starter.pid")
+      $starterId = if (Test-Path -LiteralPath $starterRecord) { (Get-Content -LiteralPath $starterRecord -Raw).Trim() }
       foreach ($owner in @(Get-Owners $services[$service])) {
         $child = Get-Proc $owner
         if (-not (Is-Service $child $service)) { continue }
+        $verified[[string]$owner] = $child
         for ($depth=0; $depth -lt 8; $depth++) {
           $parent = Get-Proc $child.ParentProcessId
           if ($null -eq $parent -or $parent.CreationDate -gt $child.CreationDate) { break }
           $line = [string]$parent.CommandLine
-          if (-not (Is-Project $parent) -or $parent.Name -notmatch "^(javaw?|node|cmd)\.exe$" -or $line -notmatch "(?i)(spring-boot-maven-plugin|spring-boot:run|org\.codehaus\.plexus\.classworlds|npm(?:\.cmd)?\s+run\s+serve|npm-cli\.js|vue-cli-service)") { break }
-          $launchers[[string]$parent.ProcessId] = $parent
+          if ($parent.Name -notmatch "^(javaw?|node|cmd)\.exe$" -or $line -notmatch "(?i)(spring-boot-maven-plugin|spring-boot:run|org\.codehaus\.plexus\.classworlds|npm(?:\.cmd)?\s+run\s+serve|npm-cli\.js|vue-cli-service)") { break }
+          if ((Is-Project $parent) -or [string]$parent.ProcessId -eq $starterId) {
+            $launchers[[string]$parent.ProcessId] = $parent
+          }
           $child = $parent
         }
       }
@@ -83,6 +115,15 @@ if [[ "$OS_PLATFORM" == windows ]]; then
         Stop-Process -Id $id -Force -ErrorAction Stop
         Write-Output "[STOP] Verified launcher PID=$id"
       } catch { if (Get-Proc $id) { Write-Output "[WARN] Launcher PID=$id : $_"; $failed=$true } }
+    }
+    foreach ($entry in $verified.Values) {
+      $id = $entry.ProcessId
+      $current = Get-Proc $id
+      if ($null -eq $current -or $current.CreationDate -ne $entry.CreationDate) { continue }
+      try {
+        Stop-Process -Id $id -Force -ErrorAction Stop
+        Write-Output "[STOP] Verified service PID=$id"
+      } catch { if (Get-Proc $id) { Write-Output "[WARN] Service PID=$id : $_"; $failed=$true } }
     }
     # Stop verified launchers first to avoid a child being restarted.
     foreach ($name in $services.Keys) {
@@ -135,9 +176,11 @@ if [[ "$OS_PLATFORM" == windows ]]; then
       }
       $record = Join-Path $runtime ($name + ".managed")
       if (Test-Path -LiteralPath $record) { Remove-Item -LiteralPath $record }
+      $record = Join-Path $runtime ($name + ".mode")
+      if (Test-Path -LiteralPath $record) { Remove-Item -LiteralPath $record }
     }
     if ($failed) { Write-Output "[WARN] Shutdown incomplete; inspect remaining processes and records."; exit 1 }
-    Write-Output "[SUCCESS] All configured service ports are free."
+    Write-Output "[SUCCESS] All selected service ports are free."
     exit 0
 POWERSHELL_SCRIPT
   WIN_PS_TEMP="$(cygpath -w "$PS_TEMP")"
@@ -197,7 +240,7 @@ for i in "${!SERVICES[@]}"; do
     pid="$(cat "$file")"
     if [[ "$pid" =~ ^[1-9][0-9]*$ ]] && ! ps -p "$pid" -o pid= >/dev/null 2>&1; then rm -f "$file"; else echo "[WARN] Unresolved PID record: $file"; failed=1; fi
   fi
-  rm -f "$RUNTIME_DIR/$name.managed"
+  rm -f "$RUNTIME_DIR/$name.managed" "$RUNTIME_DIR/$name.mode"
 done
 if (( failed )); then echo '[WARN] Shutdown incomplete.'; exit 1; fi
-echo '[SUCCESS] All configured service ports are free.'
+echo '[SUCCESS] All selected service ports are free.'

@@ -1,0 +1,16 @@
+$kind: http-request
+url: http://127.0.0.1:7002/eureka/apps
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      const apps = pm.response.json().applications.application;
+      const movie = apps.find(app => app.name === "GOUYAN-MOVIE");
+      pm.test("Movie 9010/9011 UP", () => {
+        const ports = [].concat(movie.instance).filter(i => i.status === "UP").map(i => Number(i.port.$));
+        pm.expect(ports).to.have.members([9010, 9011]);
+      });
+    language: text/javascript
+order: 3000

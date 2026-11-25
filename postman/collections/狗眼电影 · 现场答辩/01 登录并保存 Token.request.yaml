@@ -1,0 +1,24 @@
+$kind: http-request
+description: 先在集合的 Variables 中填写本地 password。登录成功后自动更新 Token。
+url: "{{baseUrl}}/sysUser/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: '{"userName": {{userNameJson}}, "password": {{passwordJson}}}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      pm.variables.set("userNameJson", JSON.stringify(pm.variables.get("username")));
+      pm.variables.set("passwordJson", JSON.stringify(pm.variables.get("password") || ""));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test("业务 code=200", () => pm.expect(body.code).to.eql(200));
+      pm.collectionVariables.unset("token");
+      pm.collectionVariables.unset("movieId");
+      if (body.code === 200 && body.data.token) pm.collectionVariables.set("token", body.data.token);
+    language: text/javascript
+order: 1000

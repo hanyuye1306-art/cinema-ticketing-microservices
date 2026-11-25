@@ -1,0 +1,8 @@
+$kind: collection
+description: 本地演练接口。先登录，再运行 Gateway 电影列表，随后验证 Bill 查询；Hystrix 状态只在演示模式可用。电影 CRUD 通过管理后台按指导书执行。
+variables:
+  baseUrl: http://127.0.0.1:8181
+  username: admin
+  password: ""
+  token: ""
+  movieId: ""

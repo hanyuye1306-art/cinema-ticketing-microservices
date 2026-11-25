@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/sysMovie?pageNum=1&pageSize=10"
+method: GET
+headers:
+  Token: "{{token}}"
+queryParams:
+  pageNum: "1"
+  pageSize: "10"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test("业务 code=200", () => pm.expect(body.code).to.eql(200));
+      if (body.code === 200) {
+        const rows = Array.isArray(body.data) ? body.data : body.data.rows;
+        if (rows && rows.length) pm.collectionVariables.set("movieId", rows[0].movieId);
+      }
+    language: text/javascript
+order: 4000

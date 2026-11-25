@@ -74,11 +74,11 @@ require_command() {
 
 require_command java
 require_command mvn
-require_command mysqladmin
 require_command mysql
 
 if [ "$BACKEND_ONLY" = false ]; then
   require_command npm
+  require_command curl
 fi
 
 # ------------------------------------------------------------
@@ -216,15 +216,13 @@ get_port_pid() {
 wait_for_port() {
   local name="$1"
   local port="$2"
-  local count=0
+  local deadline=$((SECONDS + 180))
 
   while ! port_is_open "$port"; do
 
-    count=$((count + 1))
-
-    if [ "$count" -ge 90 ]; then
-      echo "[FAIL] $name 未在 90 秒内监听端口 $port" >&2
-      echo "请查看日志: $RUNTIME_DIR/$name.log" >&2
+    if (( SECONDS >= deadline )); then
+      echo "[FAIL] $name 未在 180 秒内监听端口 $port" >&2
+      echo "请查看日志: $RUNTIME_DIR/$name.log 和 $RUNTIME_DIR/$name.log.stderr" >&2
       exit 1
     fi
 
@@ -232,6 +230,15 @@ wait_for_port() {
   done
 
   echo "[UP] $name :$port"
+}
+
+require_managed_port() {
+  local name="$1" port="$2" pid
+  pid="$(get_port_pid "$port")"
+  if [[ -z "$pid" || ! -f "$RUNTIME_DIR/$name.pid" || "$pid" != "$(cat "$RUNTIME_DIR/$name.pid")" ]]; then
+    echo "[FAIL] $name 端口 $port 已占用（PID: ${pid:-未知}）。请核对端口占用后重试。" >&2
+    exit 1
+  fi
 }
 
 # ------------------------------------------------------------
@@ -246,21 +253,22 @@ windows_start_process() {
 
   local log_file="$WIN_RUNTIME_DIR\\$name.log"
   local pid_file="$WIN_RUNTIME_DIR\\$name.starter.pid"
+  local launcher_log="$RUNTIME_DIR/$name.launch.log"
   local helper_file
 
   helper_file="$(to_windows_path "$PS_HELPER")"
   directory="$(to_windows_path "$directory")"
 
-  powershell.exe -NoProfile -NonInteractive -File "$helper_file" \
+  MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1 powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$helper_file" \
     -Executable "$executable" \
     -Arguments "$arguments" \
     -WorkingDirectory "$directory" \
     -LogFile "$log_file" \
-    -PidFile "$pid_file" || {
+    -PidFile "$pid_file" </dev/null >"$launcher_log" 2>&1 || {
       echo "[FAIL] Windows 后台启动失败: $name" >&2
+      cat "$launcher_log" >&2
       exit 1
     }
-
 }
 
 # ------------------------------------------------------------
@@ -275,22 +283,31 @@ start_java() {
   shift 3
 
   local run_arguments
-  local starter_pid
   local java_pid
   local module_dir
+  local mode_file=""
+  local mode="normal"
 
   module_dir="$CLOUD_ROOT/$module"
+  if [[ "$name" == bill || "$name" == movie-a ]]; then
+    mode_file="$RUNTIME_DIR/$name.mode"
+    if [[ "$HYSTRIX_DEMO" == true ]]; then
+      mode="hystrix-demo"
+    fi
+  fi
 
   if port_is_open "$port"; then
+    require_managed_port "$name" "$port"
+    if [[ -n "$mode_file" ]] &&
+       [[ ! -f "$mode_file" || "$(cat "$mode_file")" != "$mode" ]]; then
+      echo "[FAIL] $name 的模式与本次启动不一致或无法确认。先执行 bash scripts/stop-all.sh bill movie-a。" >&2
+      exit 1
+    fi
     echo "[REUSE] $name :$port 已运行"
     return
   fi
 
-  run_arguments="--spring.datasource.druid.password=$MYSQL_PASSWORD_VALUE"
-
-  for argument in "$@"; do
-    run_arguments="$run_arguments $argument"
-  done
+  run_arguments="$*"
 
   echo "[START] $name :$port"
 
@@ -338,6 +355,9 @@ start_java() {
 
   echo "$java_pid" > "$RUNTIME_DIR/$name.pid"
   echo "$port" > "$RUNTIME_DIR/$name.managed"
+  if [[ -n "$mode_file" ]]; then
+    printf '%s\n' "$mode" > "$mode_file"
+  fi
 
   echo "[PID] $name = $java_pid"
 }
@@ -352,13 +372,14 @@ start_frontend() {
   local directory="$3"
 
   if port_is_open "$port"; then
+    require_managed_port "$name" "$port"
     echo "[REUSE] $name :$port 已运行"
     return
   fi
 
   if [ ! -d "$directory/node_modules" ]; then
     echo "[FAIL] $name 缺少 node_modules" >&2
-    echo "请在 $directory 执行 npm install" >&2
+    echo "请在 $directory 执行 npm ci" >&2
     exit 1
   fi
 
@@ -381,8 +402,7 @@ start_frontend() {
       (
         cd "$directory"
 
-        NODE_OPTIONS=--openssl-legacy-provider \
-          nohup npm run serve \
+        nohup npm run serve \
           >"$RUNTIME_DIR/$name.log" 2>&1 &
 
         echo $! > "$RUNTIME_DIR/$name.pid"
@@ -402,40 +422,30 @@ start_frontend() {
   fi
 
   echo "$port" > "$RUNTIME_DIR/$name.managed"
+
+  local deadline=$((SECONDS + 180))
+  until curl -fsS --connect-timeout 2 --max-time 5 "http://127.0.0.1:$port/" -o /dev/null 2>/dev/null; do
+    if (( SECONDS >= deadline )); then
+      echo "[FAIL] $name 的 HTTP 页面未就绪，请查看 $RUNTIME_DIR/$name.log 和对应 .stderr 文件。" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+  echo "[READY] $name HTTP :$port"
 }
 
 # ------------------------------------------------------------
 # 12. Check MySQL
 # ------------------------------------------------------------
 
-echo "[CHECK] MySQL"
-
-if ! MYSQL_PWD="$MYSQL_PASSWORD_VALUE" mysqladmin ping -h 127.0.0.1 -P 3306 -uroot --silent; then
-  echo "[FAIL] MySQL 未运行或连接失败。" >&2
-
-  if [ "$OS_PLATFORM" = "macos" ]; then
-    echo "macOS 可使用 brew services start mysql"
-  elif [ "$OS_PLATFORM" = "windows" ]; then
-    echo "请检查 Windows MySQL 服务是否启动。"
-  else
-    echo "请检查 Linux MySQL 服务是否启动。"
-  fi
-
-  exit 1
-fi
-
-echo "[PASS] MySQL 服务正常"
-
+echo "[CHECK] MySQL / movie"
 if ! MYSQL_PWD="$MYSQL_PASSWORD_VALUE" mysql \
-  -h 127.0.0.1 -P 3306 -uroot -Nse \
-  "show databases like 'movie'" | grep -qx movie; then
-
-  echo "[FAIL] 数据库 movie 不存在。" >&2
-  echo "请确认已有数据库初始化完成。" >&2
+  --connect-timeout=5 --host=127.0.0.1 --port=3306 --user=root --database=movie \
+  --execute='SELECT movie_id FROM sys_movie LIMIT 0'; then
+  echo "[FAIL] 无法读取 movie.sys_movie。请检查 MySQL 服务、MYSQL_PASSWORD 和初始化状态。" >&2
   exit 1
 fi
-
-echo "[PASS] movie 数据库存在"
+echo "[PASS] MySQL 已认证，movie.sys_movie 可读"
 
 # ------------------------------------------------------------
 # 13. Build backend

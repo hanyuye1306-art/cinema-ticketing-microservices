@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 2857a33a-33ca-4caa-8d4f-c0cb94c62423
+
+cloudResources:
+  collections:
+    ../postman/collections/狗眼电影 · 现场答辩: 88411c9c-059b-4846-b677-a92489a016b5
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

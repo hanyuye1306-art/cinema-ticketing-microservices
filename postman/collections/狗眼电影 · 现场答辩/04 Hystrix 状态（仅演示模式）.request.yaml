@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/sysBill/hystrix/movie"
+method: GET
+headers:
+  Token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test("业务 code=200", () => pm.expect(body.code).to.eql(200));
+      pm.test("返回熔断状态", () => pm.expect(body.state).to.be.oneOf(["NOT_INITIALIZED", "OPEN", "CLOSED"]));
+    language: text/javascript
+order: 6000

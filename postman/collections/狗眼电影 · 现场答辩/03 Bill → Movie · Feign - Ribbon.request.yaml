@@ -1,0 +1,21 @@
+$kind: http-request
+name: 03 Bill → Movie · Feign / Ribbon
+description: 正常模式连点六次，观察 servedBy 在 9010 与 9011 之间交替。Hystrix 模式观察 fallback、failureType、failureMessage。
+url: "{{baseUrl}}/sysBill/movie/{{movieId}}"
+method: GET
+headers:
+  Token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test("收到电影响应或 Hystrix 降级", () => {
+        if (body.fallback) pm.expect(body.code).to.eql(503);
+        else {
+          pm.expect(body.code).to.eql(200);
+          pm.expect(body.data.movieId).to.eql(Number(pm.collectionVariables.get("movieId")));
+          pm.expect(body.servedBy).to.match(/^gouyan-movie:901[01]$/);
+        }
+      });
+    language: text/javascript
+order: 5000

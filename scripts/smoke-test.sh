@@ -13,6 +13,7 @@ PASSWORD="${GOUYAN_PASSWORD:-123456}"
 
 EXPECT_HYSTRIX=false
 BACKEND_ONLY=false
+WAIT_SECONDS=0
 
 # ------------------------------------------------------------
 # 1. Parse arguments
@@ -22,6 +23,7 @@ for argument in "$@"; do
   case "$argument" in
     --expect-hystrix) EXPECT_HYSTRIX=true ;;
     --backend-only) BACKEND_ONLY=true ;;
+    --wait) WAIT_SECONDS=90 ;;
     *)
       echo "未知参数: $argument" >&2
       exit 1
@@ -59,6 +61,23 @@ require_command() {
 }
 
 require_command curl
+
+# Never let an unresponsive local service block the rehearsal.
+curl() {
+  command curl --connect-timeout 3 --max-time 15 "$@"
+}
+
+retry_ready() {
+  local since=$SECONDS output
+  while ! output="$("$@" 2>&1)"; do
+    if (( SECONDS - since >= WAIT_SECONDS )); then
+      printf '%s\n' "$output" >&2
+      return 1
+    fi
+    sleep 2
+  done
+  printf '%s\n' "$output"
+}
 
 # Python command selection:
 # macOS/Linux: python3
@@ -135,13 +154,13 @@ print(data.get("code"))
 # 5. Eureka registry and Movie instances
 # ------------------------------------------------------------
 
-for eureka_port in 7001 7002; do
-
+check_registry() {
+  local eureka_port="$1" registry
   registry="$(
     curl -fsS \
       -H 'Accept: application/json' \
       "http://127.0.0.1:$eureka_port/eureka/apps"
-  )"
+  )" || return 1
 
   printf '%s' "$registry" |
     python_run -c '
@@ -154,8 +173,6 @@ apps = data["applications"]["application"]
 if not isinstance(apps, list):
     apps = [apps]
 
-names = {a["name"] for a in apps}
-
 required = {
     "GOUYAN-ACTOR",
     "GOUYAN-AUTH",
@@ -163,37 +180,46 @@ required = {
     "GOUYAN-CINEMA",
     "GOUYAN-HALL",
     "GOUYAN-MOVIE",
-    "CLOUD-GATEWAY"
+    "CLOUD-GATEWAY",
+    "GOUYAN-ADMIN"
 }
 
-missing = required - names
+def up_ports(app):
+    instances = app["instance"]
+    if not isinstance(instances, list):
+        instances = [instances]
+    return {int(i["port"]["$"]) for i in instances if i["status"] == "UP"}
 
-assert not missing, "missing registrations: %s" % sorted(missing)
+missing = required - {a["name"] for a in apps if up_ports(a)}
+assert not missing, "missing UP registrations: %s" % sorted(missing)
 
 movie = next(a for a in apps if a["name"] == "GOUYAN-MOVIE")
-
-instances = movie["instance"]
-
-if not isinstance(instances, list):
-    instances = [instances]
-
-assert len(instances) >= 2, "movie instance count < 2"
+assert up_ports(movie) == {9010, 9011}, "expected Movie UP on 9010 and 9011"
+peer = next(a for a in apps if a["name"] == "GOUYAN-EUREKA")
+assert up_ports(peer) == {7001, 7002}, "both Eureka peers must be UP"
 '
+}
 
+for eureka_port in 7001 7002; do
+  retry_ready check_registry "$eureka_port"
   echo "[PASS] Eureka $eureka_port 注册表与 Movie 双实例"
-
 done
 
 # ------------------------------------------------------------
 # 6. Login
 # ------------------------------------------------------------
 
-login_body="$(
-  curl -fsS \
+login_payload="$(GOUYAN_USERNAME="$USERNAME" GOUYAN_PASSWORD="$PASSWORD" python_run -c '
+import json, os
+print(json.dumps(dict(userName=os.environ["GOUYAN_USERNAME"], password=os.environ["GOUYAN_PASSWORD"])))
+')"
+login() {
+  printf '%s' "$login_payload" | curl -fsS \
     -H 'Content-Type: application/json' \
-    -d "{\"userName\":\"$USERNAME\",\"password\":\"$PASSWORD\"}" \
+    --data-binary @- \
     "$BASE_URL/sysUser/login"
-)"
+}
+login_body="$(retry_ready login)"
 
 assert_code_200 "登录与 Gateway 路由" "$login_body"
 
@@ -295,81 +321,38 @@ assert_code_200 "订单服务查询" "$bill_body"
 # 12. OpenFeign and Ribbon / Hystrix
 # ------------------------------------------------------------
 
-served_by=""
+served_by=()
 fallback_count=0
+instance_count=0
 
-for attempt in 1 2 3 4 5 6; do
-
-  feign_body="$(
-    curl -fsS \
-      -H "Token: $token" \
-      "$BASE_URL/sysBill/movie/$movie_id"
-  )"
-
-  is_fallback="$(
-    printf '%s' "$feign_body" |
-      python_run -c '
-import json, sys
-print(str(json.load(sys.stdin).get("fallback", False)).lower())
-'
-  )"
-
-  if [ "$is_fallback" = "true" ]; then
-
-    fallback_count=$((fallback_count + 1))
-
-  else
-
+if [ "$EXPECT_HYSTRIX" = true ]; then
+  fallback_count="$(GOUYAN_SMOKE_TOKEN="$token" python_run "$(dirname "$0")/smoke-hystrix.py" "$BASE_URL" "$movie_id")"
+else
+  previous_instance=""
+  for attempt in 1 2 3 4 5 6; do
+    feign_body="$(curl -fsS -H "Token: $token" "$BASE_URL/sysBill/movie/$movie_id")"
     assert_code_200 "Feign 调用 $attempt" "$feign_body"
 
     current_instance="$(
       printf '%s' "$feign_body" |
         python_run -c '
 import json, sys
-print(json.load(sys.stdin).get("servedBy", "unknown"))
-'
+result = json.load(sys.stdin)
+assert result["data"]["movieId"] == int(sys.argv[1]), "unexpected Feign movie"
+print(result["servedBy"])
+' "$movie_id"
     )"
 
-    served_by="$served_by $current_instance"
+    if [[ ! "$current_instance" =~ ^gouyan-movie:901[01]$ || "$current_instance" == "$previous_instance" ]]; then
+      echo "[FAIL] Ribbon 未按 9010/9011 交替: ${served_by[*]} $current_instance" >&2
+      exit 1
+    fi
+    served_by+=("$current_instance")
+    previous_instance="$current_instance"
+  done
 
-  fi
-
-done
-
-instance_count="$(
-  printf '%s\n' $served_by |
-    sed '/^$/d' |
-    sort -u |
-    wc -l |
-    tr -d ' '
-)"
-
-if [ "$EXPECT_HYSTRIX" = true ]; then
-
-  if [ "$fallback_count" -le 0 ]; then
-    echo "[FAIL] 未观察到 Hystrix 降级" >&2
-    exit 1
-  fi
-
-  hystrix_body="$(
-    curl -fsS \
-      -H "Token: $token" \
-      "$BASE_URL/sysBill/hystrix/movie"
-  )"
-
-  assert_code_200 "Hystrix 状态" "$hystrix_body"
-
-  echo "[PASS] Hystrix 降级次数: $fallback_count"
-
-else
-
-  if [ "$instance_count" -lt 2 ]; then
-    echo "[FAIL] Ribbon 未轮询到两个 Movie 实例: $served_by" >&2
-    exit 1
-  fi
-
-  echo "[PASS] Ribbon 轮询实例:$served_by"
-
+  instance_count=2
+  echo "[PASS] Ribbon 轮询实例: ${served_by[*]}"
 fi
 
 # ------------------------------------------------------------
@@ -379,7 +362,7 @@ fi
 if [ "$BACKEND_ONLY" = false ]; then
 
   user_code="$(
-    curl -sS -o /dev/null -w '%{http_code}' \
+    retry_ready curl -fsS -o /dev/null -w '%{http_code}' \
       http://127.0.0.1:8080/
   )"
 
@@ -389,7 +372,7 @@ if [ "$BACKEND_ONLY" = false ]; then
   fi
 
   admin_code="$(
-    curl -sS -o /dev/null -w '%{http_code}' \
+    retry_ready curl -fsS -o /dev/null -w '%{http_code}' \
       http://127.0.0.1:8888/
   )"
 
