@@ -4,6 +4,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gouyan.system.mapper.SysActorMovieMapper">
 
+    <!-- 三个条件可以独立组合。where 标签在有有效条件时补 WHERE，并清理首个 AND。
+         只提供 movieId 时，观察返回的 actor_id 和 actor_role_id，分别区分参演者及其角色。 -->
     <select id="findAll" parameterType="SysActorMovie" resultType="SysActorMovie">
         select * from sys_actor_movie
         <where>
@@ -13,10 +15,12 @@
         </where>
     </select>
 
+    <!-- INSERT 依赖表的列顺序，三个值依次对应电影、演员和角色。 -->
     <update id="add" parameterType="SysActorMovie">
         insert into sys_actor_movie values (#{movieId}, #{actorId}, #{actorRoleId})
     </update>
 
+    <!-- 按电影、演员和角色三列定位关联，保留同一演员在该电影中的其他角色。 -->
     <update id="delete" parameterType="SysActorMovie">
         delete from sys_actor_movie where movie_id = #{movieId} and actor_id = #{actorId} and actor_role_id = #{actorRoleId}
     </update>

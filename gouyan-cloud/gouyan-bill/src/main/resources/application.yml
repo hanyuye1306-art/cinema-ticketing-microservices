@@ -63,11 +63,14 @@ aj:
 eureka:
   client: #客户端注册进eureka服务列表内
     service-url:
+      # defaultZone 提供两个 Eureka 端点，instance-id 使用服务名和当前监听端口区分实例。
       defaultZone: http://127.0.0.1:7001/eureka/,http://127.0.0.1:7002/eureka/
   instance:
     instance-id:  ${spring.application.name}:${server.port}
 
 # Movie Feign 客户端使用 Ribbon 轮询策略
+# Bill 远程查询电影详情。
+# 同实例和跨实例重试均为零，连接与读超时分别为 1000ms、4000ms。
 gouyan-movie:
   ribbon:
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule

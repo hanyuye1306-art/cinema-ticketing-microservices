@@ -3,6 +3,9 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
+    # druid Profile 的连接池参数。MyBatis 查询执行前会从数据源获取连接。
+    # initialSize 控制初始化数量，minIdle 是最小空闲目标，maxActive 限制池中活动连接数。
+    # maxWait 单位为毫秒，表示获取池连接时的等待上限。SQL 执行耗时另行排查。
     druid:
       url: jdbc:mysql://localhost:3306/movie?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
       username: root
@@ -23,6 +26,8 @@ spring:
       # 配置一个连接在池中最大生存的时间，单位是毫秒
       maxEvictableIdleTimeMillis: 900000
       # 配置检测连接是否有效
+      # 空闲连接按 testWhileIdle 策略做存活校验，借出和归还时的逐次校验由下两项控制。
+      # 此探测使用常量查询。业务访问仍需核对实际 schema、表和权限。
       validationQuery: SELECT 1 FROM DUAL
       testWhileIdle: true
       testOnBorrow: false

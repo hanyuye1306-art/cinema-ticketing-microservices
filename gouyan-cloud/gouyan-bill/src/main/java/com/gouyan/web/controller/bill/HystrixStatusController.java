@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 仅用于课程熔断演示的只读 Hystrix 状态接口。
+ * 提供当前 Bill 实例的电影查询断路器状态与事件计数。
  */
 @Profile("hystrix-demo")
 @RestController
 public class HystrixStatusController {
 
+    // 该接口没有业务参数，返回当前 Bill 实例内的命令指标。
     @GetMapping("/sysBill/hystrix/movie")
     public ResponseResult movieCircuitStatus() {
         ResponseResult result = ResponseResult.success();

@@ -22,6 +22,8 @@ spring:
         locator:
           enabled: true
       routes:
+        # 演员、电影演员关联和演员角色。
+        # 用 Path 匹配请求，以 lb:// 服务名查实例，StripPrefix=0 保留原始路径。
         - id: gouyan-actor
           uri: lb://gouyan-actor
           predicates:
@@ -30,6 +32,7 @@ spring:
             - StripPrefix=0
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
+        # 用户、兴趣、角色、资源、场次、验证码与文件。
         - id: gouyan-auth
           uri: lb://gouyan-auth
           predicates:
@@ -38,6 +41,7 @@ spring:
             - StripPrefix=0
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
+        # 账单以及账单发起的电影远程查询。
         - id: gouyan-bill
           uri: lb://gouyan-bill
           predicates:
@@ -47,6 +51,7 @@ spring:
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
 
+        # 影院、区域与品牌。
         - id: gouyan-cinema
           uri: lb://gouyan-cinema
           predicates:
@@ -55,6 +60,7 @@ spring:
             - StripPrefix=0
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
+        # 影厅及影厅类别。
         - id: gouyan-hall
           uri: lb://gouyan-hall
           predicates:
@@ -63,6 +69,7 @@ spring:
             - StripPrefix=0
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
+        # 电影、年代、地区、分类、电影分类关联、评论与时长。
         - id: gouyan-movie
           uri: lb://gouyan-movie
           predicates:
@@ -76,6 +83,7 @@ spring:
 eureka:
   client: #客户端注册进eureka服务列表内
     service-url:
+      # defaultZone 提供两个 Eureka 端点，instance-id 使用服务名和当前监听端口区分实例。
        defaultZone: http://127.0.0.1:7001/eureka/,http://127.0.0.1:7002/eureka/
   instance:
     instance-id:  ${spring.application.name}:${server.port}

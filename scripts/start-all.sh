@@ -554,6 +554,7 @@ fi
 # 14. Start Eureka
 # ------------------------------------------------------------
 
+# 用同一个 Eureka 模块分别启动 peer1 和 peer2。配置文件各自指向另一节点。
 start_java eureka-peer1 7001 gouyan-eureka \
   --spring.profiles.active=peer1
 

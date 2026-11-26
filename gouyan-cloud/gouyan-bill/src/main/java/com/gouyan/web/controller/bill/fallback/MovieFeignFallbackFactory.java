@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MovieFeignFallbackFactory implements FallbackFactory<MovieFeignClient> {
 
+    // 工厂接收调用失败原因，记录异常类型和消息，返回提供结构化降级响应的 Feign 接口实现。
+    // failureMessage 随业务响应返回，可能包含下游异常细节。
     @Override
     public MovieFeignClient create(Throwable cause) {
         String failureType = cause == null ? "Unknown" : cause.getClass().getSimpleName();

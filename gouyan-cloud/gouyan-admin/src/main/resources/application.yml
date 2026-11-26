@@ -62,6 +62,7 @@ aj:
 eureka:
   client: #客户端注册进eureka服务列表内
     service-url:
+      # defaultZone 提供两个 Eureka 端点，instance-id 使用服务名和当前监听端口区分实例。
       defaultZone: http://127.0.0.1:7001/eureka/,http://127.0.0.1:7002/eureka/
   instance:
     instance-id:  ${spring.application.name}:${server.port}

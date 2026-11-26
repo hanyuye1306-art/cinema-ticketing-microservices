@@ -22,6 +22,7 @@ public class SysCinemaController extends BaseController {
     @Autowired
     private SysSessionServiceImpl sysSessionService;
 
+    // Spring MVC 将查询参数绑定到 SysCinemaVo，Controller 初始化分页并交给 Service 查询。
     @GetMapping("/sysCinema")
     public ResponseResult findAll(SysCinemaVo sysCinemaVo){
         startPage();

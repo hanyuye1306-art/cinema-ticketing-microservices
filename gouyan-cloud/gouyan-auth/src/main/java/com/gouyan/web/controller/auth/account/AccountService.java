@@ -80,6 +80,12 @@ public class AccountService {
         }
     }
 
+    /**
+     * 校验图形验证码和发送频率，将重置验证码发往账号绑定邮箱。
+     * 新验证码仅在邮件发送成功后生效。校验状态保存在当前进程中。
+     * @param request 含账号、邮箱和图形验证码凭证的请求
+     * @param address 用于限流的请求来源地址
+     */
     public synchronized void sendCode(AccountRequests.SendCode request, String address) {
         if (!mailEnabled || mail == null || !StringUtils.hasText(from)) {
             throw new AuthenticationException("找回密码邮件服务尚未配置，请联系管理员");
@@ -121,6 +127,11 @@ public class AccountService {
         challenges.put(key, pending);
     }
 
+    /**
+     * 校验邮箱与验证码摘要，并在修改密码前消费该验证码。
+     * @param request 含账号、邮箱、验证码和新密码的请求
+     * @param address 用于限制校验频率的请求来源地址
+     */
     public synchronized void reset(AccountRequests.Reset request, String address) {
         validatePasswords(request.getPassword(), request.getConfirmPassword());
         long now = clock.millis();

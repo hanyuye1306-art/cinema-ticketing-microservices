@@ -74,6 +74,8 @@
         select * from sys_session where session_id = #{id}
     </select>
 
+    <!-- BillPaymentServiceImpl.updateBill。
+         按场次主键锁定记录，串行核对同一场次的座位占用状态。 -->
     <select id="findOneForUpdate" parameterType="long" resultType="SysSession">
         select * from sys_session where session_id = #{id} for update
     </select>

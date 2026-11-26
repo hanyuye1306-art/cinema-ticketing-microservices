@@ -15,6 +15,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
         fallbackFactory = MovieFeignFallbackFactory.class)
 public interface MovieFeignClient {
 
+    // SysBillController → BillMovieQueryServiceImpl → 本接口的 Feign 代理。
+    // id 替换远端路径变量，Token 放入 HTTP 请求头。Ribbon 根据 gouyan-movie 服务名选取实例。
+    /**
+     * 按电影服务名解析目标实例并请求详情。
+     * @param id 绑定到远端路径的电影主键
+     * @param token 传给电影服务的会话请求头
+     * @return 电影详情响应或客户端降级响应
+     */
     @GetMapping("/sysMovie/{id}")
     ResponseResult findById(@PathVariable("id") Long id, @RequestHeader("Token") String token);
 }

@@ -26,6 +26,8 @@
         select * from sys_bill where bill_id = #{id}
     </select>
 
+    <!-- BillPaymentServiceImpl.updateBill。
+         以 bill_id 锁定订单行，使同一订单的付款请求串行读取持久化状态。 -->
     <select id="findByIdForUpdate" parameterType="long" resultMap="BillMap">
         select * from sys_bill where bill_id = #{id} for update
     </select>

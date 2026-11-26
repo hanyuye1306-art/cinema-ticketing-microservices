@@ -38,6 +38,9 @@ public class BillPaymentServiceImpl implements BillPaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    // 前台订单详情提交支付，BillDetail.vue 将订单包装为 sysBill 后 PUT /sysBill。
+    // 锁订单行并检查状态与时限，锁关联场次行，再更新订单、座位图、已售数和电影票房。
+    // 电影票房走读取后计算再写回，不同场次并发更新同一电影时须核实是否会丢失累计。
     public int updateBill(SysBillVo sysBillVo) {
         if (sysBillVo == null || sysBillVo.getSysBill() == null
                 || sysBillVo.getSysBill().getBillId() == null) {
@@ -98,6 +101,8 @@ public class BillPaymentServiceImpl implements BillPaymentService {
     /**
      * 以数据库中的场次座位为准完成占座，拒绝前端伪造的整份座位图和重复售卖。
      */
+    // 从订单解析行列，列号转换为零基索引。状态 1 或 3 拒绝购买，其余命中的座位置为 3。
+    // 缺行、越界或重复选中已置为 3 的同一座位都会抛异常，外层事务负责回滚。
     private int markPurchasedSeats(SysSession session, String purchasedSeats) {
         JSONObject seatMap = JSON.parseObject(session.getSessionSeats());
         JSONArray seats = JSON.parseArray(purchasedSeats);

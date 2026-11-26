@@ -10,11 +10,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** 提供演员档案维护与包含作品信息的演员详情查询。 */
 @RestController
 public class SysActorController extends BaseController {
     @Autowired
     private SysActorServiceImpl sysActorService;
 
+    /**
+     * 将演员筛选条件交给服务层，并返回分页结果。
+     * @param sysActor 从请求参数绑定的演员姓名、性别、学校等筛选条件
+     * @return 演员列表及分页信息
+     */
     @GetMapping("/sysActor")
     public ResponseResult findAll(SysActor sysActor){
         startPage();
@@ -42,6 +48,11 @@ public class SysActorController extends BaseController {
         return getResult(sysActorService.delete(ids));
     }
 
+    /**
+     * 查询演员详情，由服务层加载关联作品。
+     * @param id 演员主键
+     * @return 演员详情及关联电影信息
+     */
     @GetMapping("/sysActor/find/{id}")
     public ResponseResult findActorById(@PathVariable Long id){
         return getResult(sysActorService.findActorById(id));
