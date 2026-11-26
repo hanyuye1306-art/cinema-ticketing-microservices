@@ -275,6 +275,7 @@ windows_start_process() {
 # 10. Start Java microservice
 # ------------------------------------------------------------
 
+
 start_java() {
   local name="$1"
   local port="$2"
@@ -282,34 +283,97 @@ start_java() {
 
   shift 3
 
-  local run_arguments
+  local run_arguments="$*"
   local java_pid
-  local module_dir
+  local module_dir="$CLOUD_ROOT/$module"
   local mode_file=""
   local mode="normal"
+  local old_mode=""
+  local deadline
 
-  module_dir="$CLOUD_ROOT/$module"
-  if [[ "$name" == bill || "$name" == movie-a ]]; then
+  # Bill 和 Movie A 支持 Hystrix 演示模式
+  if [[ "$name" == "bill" || "$name" == "movie-a" ]]; then
     mode_file="$RUNTIME_DIR/$name.mode"
+
     if [[ "$HYSTRIX_DEMO" == true ]]; then
       mode="hystrix-demo"
     fi
   fi
 
+  # 检查端口是否已经被占用
   if port_is_open "$port"; then
-    require_managed_port "$name" "$port"
-    if [[ -n "$mode_file" ]] &&
-       [[ ! -f "$mode_file" || "$(cat "$mode_file")" != "$mode" ]]; then
-      echo "[FAIL] $name 的模式与本次启动不一致或无法确认。先执行 bash scripts/stop-all.sh bill movie-a。" >&2
+
+    java_pid="$(get_port_pid "$port" || true)"
+
+    echo "[CHECK] $name :$port PID=${java_pid:-unknown}"
+
+    if [[ -n "$mode_file" && -f "$mode_file" ]]; then
+      old_mode="$(tr -d '\r\n' < "$mode_file")"
+    fi
+
+    # 只有受管理的进程且模式一致时才直接复用
+    if [[ -n "$java_pid" &&
+          -f "$RUNTIME_DIR/$name.pid" &&
+          "$java_pid" == "$(tr -d '\r\n' < "$RUNTIME_DIR/$name.pid")" &&
+          ( -z "$mode_file" || "$old_mode" == "$mode" ) ]]; then
+
+      echo "[REUSE] $name :$port PID=$java_pid"
+      return 0
+    fi
+
+    # 模式不一致、记录缺失或存在残留进程
+    # 交由原停止脚本核实进程归属，避免误杀
+    echo "[RESTART] $name :$port"
+    echo "[INFO] 检测到残留进程或运行模式不一致"
+    echo "[INFO] 当前模式: ${old_mode:-unknown}"
+    echo "[INFO] 目标模式: $mode"
+
+    if ! bash "$PROJECT_ROOT/scripts/stop-all.sh" "$name"; then
+      echo "[FAIL] 无法安全停止 $name" >&2
+      echo "[INFO] 请检查端口 $port 的进程归属" >&2
       exit 1
     fi
-    echo "[REUSE] $name :$port 已运行"
-    return
+
+    # 等待端口真正释放
+    deadline=$((SECONDS + 30))
+
+    while port_is_open "$port"; do
+
+      if (( SECONDS >= deadline )); then
+        echo "[FAIL] $name 端口 $port 未释放" >&2
+        exit 1
+      fi
+
+      sleep 1
+    done
+
+    echo "[FREE] $name :$port"
   fi
 
-  run_arguments="$*"
+  # 不覆盖尚未确认已经退出的启动器记录
+  if [[ -f "$RUNTIME_DIR/$name.starter.pid" ||
+        -f "$RUNTIME_DIR/$name.pid" ]]; then
+
+    echo "[CHECK] 清理 $name 遗留运行记录"
+
+    if ! bash "$PROJECT_ROOT/scripts/stop-all.sh" "$name"; then
+      echo "[FAIL] $name 遗留进程或记录未能安全清理" >&2
+      exit 1
+    fi
+  fi
+
+  if port_is_open "$port"; then
+    echo "[FAIL] $name 端口 $port 再次被占用" >&2
+    exit 1
+  fi
+
+  # 清除过期模式标记
+  rm -f "$RUNTIME_DIR/$name.mode"
+  rm -f "$RUNTIME_DIR/$name.managed"
 
   echo "[START] $name :$port"
+  echo "[MODE] $mode"
+  echo "[ARGS] $run_arguments"
 
   case "$OS_PLATFORM" in
 
@@ -344,22 +408,42 @@ start_java() {
 
   esac
 
+  # 等待服务监听端口
   wait_for_port "$name" "$port"
 
-  java_pid="$(get_port_pid "$port")"
+  java_pid="$(get_port_pid "$port" || true)"
 
-  if [ -z "$java_pid" ]; then
+  if [[ -z "$java_pid" ]]; then
     echo "[FAIL] 无法获取 $name 的监听 PID" >&2
     exit 1
   fi
 
-  echo "$java_pid" > "$RUNTIME_DIR/$name.pid"
-  echo "$port" > "$RUNTIME_DIR/$name.managed"
+  # 短暂等待，避免服务刚监听端口就退出
+  sleep 3
+
+  if ! port_is_open "$port" ||
+     [[ "$(get_port_pid "$port" || true)" != "$java_pid" ]]; then
+
+    echo "[FAIL] $name 启动后退出或监听进程发生变化" >&2
+    tail -n 40 "$RUNTIME_DIR/$name.log" || true
+
+    if [[ -f "$RUNTIME_DIR/$name.log.stderr" ]]; then
+      tail -n 40 "$RUNTIME_DIR/$name.log.stderr" || true
+    fi
+
+    exit 1
+  fi
+
+  # 保存本轮真实运行信息
+  printf '%s\n' "$java_pid" > "$RUNTIME_DIR/$name.pid"
+  printf '%s\n' "$port" > "$RUNTIME_DIR/$name.managed"
+
   if [[ -n "$mode_file" ]]; then
     printf '%s\n' "$mode" > "$mode_file"
   fi
 
   echo "[PID] $name = $java_pid"
+  echo "[READY] $name :$port"
 }
 
 # ------------------------------------------------------------
