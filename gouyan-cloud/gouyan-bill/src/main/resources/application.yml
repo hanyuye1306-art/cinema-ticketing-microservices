@@ -73,6 +73,9 @@ eureka:
 # 同实例和跨实例重试均为零，连接与读超时分别为 1000ms、4000ms。
 gouyan-movie:
   ribbon:
+    # Bill 的电影客户端直接从下列地址建立候选列表。
+    NIWSServerListClassName: com.netflix.loadbalancer.ConfigurationBasedServerList
+    listOfServers: "127.0.0.1:9010,127.0.0.1:9011"
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
     ConnectTimeout: 1000
     ReadTimeout: 4000
